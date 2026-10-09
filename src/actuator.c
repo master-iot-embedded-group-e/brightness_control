@@ -13,12 +13,7 @@ void hilo_actuador_run(void *p1, void *p2, void *p3)
 
     while (1) {
         if (k_msgq_get(&q_rgb_data, &rgb_pwm, K_FOREVER) == 0) {
-
-            if (rgb_pwm.blue) {
-                gpio_pin_set_dt(&led_blinky, 1);
-            } else {
-                gpio_pin_set_dt(&led_blinky, 0);
-            }
+            gpio_pin_toggle_dt(&led_blinky);
         }
     }
 }
