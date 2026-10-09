@@ -28,5 +28,5 @@ void fsm_thread(void *p1, void *p2, void *p3)
     }
 }
 
-K_THREAD_DEFINE(fsm_thread, STACK_SIZE, fsm_thread,
+K_THREAD_DEFINE(fsm_thread_id, STACK_SIZE, fsm_thread,
                 NULL, NULL, NULL, PRIORITY, 0, 0);
