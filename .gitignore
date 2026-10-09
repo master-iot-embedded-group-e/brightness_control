@@ -6,6 +6,8 @@
 *.ko
 *.obj
 *.elf
+build
+.zephyr-cache
 
 # Linker output
 *.ilk
