@@ -8,6 +8,8 @@ void producer_thread(void *p1, void *p2, void *p3)
 {
     struct ldr_t ldr;
 
+    printk("    Producer thread init   \n");
+
     while (1) {
         ldr.value_lux = 999.0; // Ejemplo: simulación de lux
         ldr.timestamp = k_uptime_get_32();

@@ -10,6 +10,7 @@ void hilo_actuador_run(void *p1, void *p2, void *p3)
     struct rgb_pwm_t rgb_pwm;
     static const struct gpio_dt_spec led_blinky = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 
+    printk("    Actuator thread init   \n");
 
     while (1) {
         if (k_msgq_get(&q_rgb_data, &rgb_pwm, K_FOREVER) == 0) {

@@ -9,6 +9,8 @@ void fsm_thread(void *p1, void *p2, void *p3)
     struct ldr_t ldr;
     struct rgb_pwm_t rgb_pwm;
 
+    printk("    FSM thread init   \n");
+
     while (1) {
         /* K_FOREVER makes it blocking */
         if (k_msgq_get(&q_ldr_data, &ldr, K_FOREVER) == 0) {
