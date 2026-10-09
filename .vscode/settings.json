@@ -1,22 +1,19 @@
 {
-  "terminal.integrated.env.windows": {
-    "ZEPHYR_TOOLCHAIN_VARIANT": "zephyr",
-
-    "ZEPHYR_SDK_INSTALL_DIR": "C:/Asignaturas/EMB_PLA_COM/zephyr-sdk-1.0.1",
-
-    "ZEPHYR_BASE": "C:/Asignaturas/EMB_PLA_COM/zephyrproject/zephyr",
-
-    "ZEPHYR_DIR": "C:/Asignaturas/EMB_PLA_COM/zephyrproject",
-
-    "PROJECT_DIR": "C:/Users/local_profedte/Downloads/blink_basic/"
+  "terminal.integrated.env.linux": {
+    "PROJECT_DIR": "${workspaceFolder}",
+    "BUILD_DIR": "${workspaceFolder}/build",
+    "CACHE_DIR": "${workspaceFolder}/.zephyr-cache/",
+    "ZEPHYR_BOARD": "nucleo_wl55jc"
   },
 
-  "cortex-debug.armToolchainPath":
-    "C:/Asignaturas/EMB_PLA_COM/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin",
+  "C_Cpp.default.compileCommands":
+    "${workspaceFolder}/build/compile_commands.json",
 
-  "cortex-debug.armToolchainPrefix":
-    "arm-zephyr-eabi",
+  // The module has no .clang-format of its own: format with Zephyr's style.
+  "C_Cpp.clang_format_style":
+    "file:${workspaceFolder}/../zephyr/.clang-format",
 
-  "cortex-debug.gdbPath":
-    "C:/Asignaturas/EMB_PLA_COM/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb.exe"
+  "cortex-debug.armToolchainPrefix": "arm-zephyr-eabi",
+
+  "cmake.sourceDirectory": "${workspaceFolder}"
 }

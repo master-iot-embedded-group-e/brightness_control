@@ -5,33 +5,38 @@
     {
       "name": "Debug Zephyr - NUCLEO-WL55JC",
 
+      // Usa la extensión Cortex-Debug para controlar la sesión de depuración.
       "type": "cortex-debug",
+      // Inicia una nueva sesión; no se conecta a una sesión ya iniciada.
       "request": "launch",
 
+      // Establece la carpeta raíz del proyecto como directorio de trabajo.
       "cwd":
-        "C:/Users/local_profedte/Downloads/blink_basic",
+        "${workspaceFolder}",
 
+      // Selecciona el ejecutable ELF generado por Zephyr, que contiene el programa y los símbolos de depuración.
       "executable":
-        "C:/Users/local_profedte/Downloads/blink_basic/build/zephyr/zephyr.elf",
+        "${workspaceFolder}/build/zephyr/zephyr.elf",
 
+      // Indica que el servidor de depuración se inicia mediante una tarea externa.
       "servertype": "external",
+      // Conecta GDB al servidor OpenOCD que escucha en el puerto local 3333.
       "gdbTarget": "localhost:3333",
 
-      "armToolchainPath":
-        "C:/Asignaturas/EMB_PLA_COM/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin",
-
+      // Define el prefijo común de los ejecutables de la cadena de herramientas ARM.
       "toolchainPrefix":
         "arm-zephyr-eabi",
 
-      "gdbPath":
-        "C:/Asignaturas/EMB_PLA_COM/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb.exe",
-
+      // Antes de depurar, ejecuta la tarea que compila el proyecto e inicia OpenOCD.
       "preLaunchTask": "Zephyr: Debug Server",
 
+      // Tras arrancar, continúa la ejecución hasta llegar a la función main.
       "runToEntryPoint": "main",
 
+      // Al terminar la depuración, ejecuta la tarea que cierra OpenOCD.
       "postDebugTask": "Zephyr: Stop Debug Server",
 
+      // Oculta los mensajes internos de diagnóstico de la extensión Cortex-Debug.
       "showDevDebugOutput": "none"
     }
   ]
