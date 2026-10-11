@@ -98,3 +98,7 @@ uint16_t ldr_read(void) {
     ldr_power_off();
     return sample;
 }
+
+uint8_t raw_to_percentage(uint16_t raw) {
+    return (raw * 100) / ((1 << ADC_RESOLUTION) - 1);
+}

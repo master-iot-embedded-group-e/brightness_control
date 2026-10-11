@@ -15,6 +15,7 @@ void producer_thread(void *p1, void *p2, void *p3)
     while (1) {
         uint16_t ldr_reading = ldr_read();
         printk("LDR reading: %d\n", ldr_reading);
+        printk("LDR reading as percentage: %d%%\n", raw_to_percentage(ldr_reading));
         ldr.reading = ldr_reading; // Ejemplo: simulación de lux
         ldr.timestamp = k_uptime_get_32();
 
