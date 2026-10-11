@@ -29,7 +29,7 @@ int main(void)
         return 0;
     }
 
-    // Toggle loop: change state every 1 second
+    // Keep the main thread idle after initialization
     while (1) {
         k_sleep(K_FOREVER);
     }
