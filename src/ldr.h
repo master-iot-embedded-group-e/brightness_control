@@ -13,7 +13,7 @@ static const struct adc_dt_spec ldr =
 static const struct gpio_dt_spec ldr_power =
     GPIO_DT_SPEC_GET(DT_ALIAS(ldrpower), gpios);
 
-void ldr_power_on(void) {
+static int ldr_power_on(void) {
     printk("Turning on LDR power\n");
     gpio_pin_set_dt(&ldr_power, 1);
     // Tiempo de estabilización de LDR (1ms)
@@ -24,63 +24,72 @@ void ldr_power_on(void) {
         printk("ERROR: could not reactivate ADC: %d\n", ret);
         // Apagar LDR si no se pudo reactivar el ADC
         gpio_pin_set_dt(&ldr_power, 0);
-        return;
+        return ret;
     }
     printk("LDR power turned on\n");
+    return 0;
 }
 
-void ldr_power_off(void) {
+static int ldr_power_off(void) {
     printk("Turning off LDR power\n");
     // Liberar ADC después de la lectura
     int ret = pm_device_runtime_put(ldr.dev);
     if (ret < 0) {
         printk("ERROR: could not release ADC: %d\n", ret);
+        return ret;
     }
     // Apagar LDR
     gpio_pin_set_dt(&ldr_power, 0);
     printk("LDR power turned off\n");
+    return 0;
 }
 
-void ldr_init(void) {
+int ldr_init(void) {
     printk("Initializing LDR\n");
     if (!gpio_is_ready_dt(&ldr_power)) {
         printk("ERROR: GPIO LDR not ready\n");
-        return;
+        return -1;
     }
 
+    int ret;
     // Configurar GPIO para alimentar LDR
-    int ret = gpio_pin_configure_dt(&ldr_power, GPIO_OUTPUT_INACTIVE);
+    ret = gpio_pin_configure_dt(&ldr_power, GPIO_OUTPUT_INACTIVE);
     if (ret < 0) {
         printk("ERROR GPIO: %d\n", ret);
-        return;
+        return ret;
     }
 
     if (!adc_is_ready_dt(&ldr)) {
         printk("ERROR: ADC not ready\n");
-        return;
+        return -1;
     }
 
     // Configurar el canal mientras el ADC está activo
     ret = adc_channel_setup_dt(&ldr);
     if (ret < 0) {
         printk("ERROR: could not configure ADC: %d\n", ret);
-        return;
+        return ret;
     }
 
     // Habilitar Runtime PM para el dispositivo ADC
     ret = pm_device_runtime_enable(ldr.dev);
     if (ret < 0) {
         printk("ERROR: could not enable Runtime PM: %d\n", ret);
-        return;
+        return ret;
     }
     
     printk("LDR initialization complete\n");
+    return 0;
 }
 
-uint16_t ldr_read(void) {
-    ldr_power_on();
-    printk("Reading LDR value\n");
+int16_t ldr_read(void) {
     int ret;
+    ret = ldr_power_on();
+    if (ret < 0) {
+        printk("ERROR: could not turn on LDR power: %d\n", ret);
+        return ret; // Return error code if LDR power could not be turned on
+    }
+    printk("Reading LDR value\n");
     uint16_t sample;
     struct adc_sequence sequence = {
         .buffer = &sample,
@@ -93,9 +102,14 @@ uint16_t ldr_read(void) {
         ret = adc_read_dt(&ldr, &sequence);
     } else {
         printk("ERROR: could not initialize sequence: %d\n", ret);
+        return ret; // Return error code if sequence initialization failed
     }
     printk("LDR read complete: %d\n", sample);
-    ldr_power_off();
+    ret = ldr_power_off();
+    if (ret < 0) {
+        printk("ERROR: could not turn off LDR power\n");
+        return ret; // Return error code even if LDR power could not be turned off
+    }
     return sample;
 }
 
