@@ -33,7 +33,7 @@ The architecture is based in threads:
 ## Interfaces
 To avoid problems between the threads, queued messages will be used. The reference for this can be found here: [Queued Messages](https://docs.zephyrproject.org/latest/kernel/services/data_passing/message_queues.html)
 
-The interface will be defined in interfaces.h with an struct for the data from the producer and the data to be passed to the actuator.
+The interface is defined in `src/interface.h`, with one structure for producer data and another for actuator data.
 
 ## Testing
 
