@@ -6,7 +6,7 @@
 
 /* 1. Estructuras de datos que viajan entre hilos */
 struct ldr_t {
-    float value_lux;
+    uint16_t reading;
     uint32_t timestamp;
 };
 

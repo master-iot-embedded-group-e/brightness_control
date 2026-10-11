@@ -1,9 +1,38 @@
 #include <zephyr/dt-bindings/pinctrl/stm32-pinctrl.h>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/adc/adc.h>
 
 / {
-	aliases {
+    zephyr,user {
+        io-channels = <&adc1 5>;
+        io-channel-names = "ldr";
+    };
+
+    aliases {
+        ldrpower = &ldr_power;
 		led0 = &blue_led_1; 	// This is LED1 as labeled STM32WL55JC board's 
-		//led0 = &green_led_2; 	// This is LED2 as labeled STM32WL55JC board's 
-		//led0 = &red_led_3; 	// This is LED3 as labeled STM32WL55JC board's 
-	};
+    };
+
+    leds {
+        compatible = "gpio-leds";
+
+        ldr_power: led_external_0 {
+            gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
+            label = "LDR power at D2";
+        };
+    };
+};
+
+&adc1 {
+    #address-cells = <1>;
+    #size-cells = <0>;
+    status = "okay";
+
+    channel@5 {
+        reg = <5>;
+        zephyr,gain = "ADC_GAIN_1";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,resolution = <12>;
+    };
 };
