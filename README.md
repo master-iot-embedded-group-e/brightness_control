@@ -19,6 +19,18 @@ Hands-on lab for Embedded Platforms and Communications for IoT.
 - `feat/ldr`: Capture the LDR input and convert into luminosity (flexibility around the units)
 - `feat/rgb`: Feature to control the RGB (might be developed inside another feature).
 
+### How the tasks are assigned
+Lottery:
+- Omar
+    - feat/serial
+    - feat/ldr
+    - feat/rgb
+- Carlos
+    - feat/fsm
+    - feat/buttons
+    - feat/pwm
+
+
 ## Hardware components
 - LDR
 - RGB
