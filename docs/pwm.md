@@ -44,3 +44,10 @@ pinctrl-0 = <&tim2_ch2_pb3 &tim2_ch3_pb10>;
 
 > My board (Carlos) is common-anode, so we need  PWM_POLARITY_INVERTED for that hardware.
 
+## Error on different periods for each timer
+![alt text](image-1.png)
+The sys clock works at 48 MHz with no prescaler, so TIM16 also works at 48 MHz. THe TIM 16 has a 16 bit counter that increases each 20.8 ns at that speed, so the conter ends at 65 636 ticks, that is very fast. So The max period is 65536 / MHz is 1.365 ms. It does not affect TIM2 as it has a 32 bit counter.
+
+### The fix - Short period
+With 1 ms as 48k ticks with no prescaler is lower than the max counter value. and it should be done for each timer for compatibility.
+

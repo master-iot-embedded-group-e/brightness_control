@@ -1,6 +1,8 @@
 #include <zephyr/dt-bindings/pinctrl/stm32-pinctrl.h>
 #include <zephyr/dt-bindings/pwm/pwm.h>
 
+#define RGB_PWM_PERIOD PWM_USEC(1000)
+
 &timers2
 {
 	status = "okay";
@@ -36,15 +38,15 @@
 		compatible = "pwm-leds";
 
 		red_pwm_led: red_pwm_led {
-			pwms = <&pwm2 2 15625000 PWM_POLARITY_INVERTED>;
+			pwms = <&pwm2 2 RGB_PWM_PERIOD PWM_POLARITY_INVERTED>;
 		};
 
 		green_pwm_led: green_pwm_led {
-			pwms = <&pwm2 3 15625000 PWM_POLARITY_INVERTED>;
+			pwms = <&pwm2 3 RGB_PWM_PERIOD PWM_POLARITY_INVERTED>;
 		};
 
 		blue_pwm_led: blue_pwm_led {
-			pwms = <&pwm16 1 15625000 PWM_POLARITY_INVERTED>;
+			pwms = <&pwm16 1 RGB_PWM_PERIOD PWM_POLARITY_INVERTED>;
 		};
 	};
 
