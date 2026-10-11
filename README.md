@@ -52,3 +52,6 @@ The interface is defined in `src/interface.h`, with one structure for producer d
 ## References
 - [Threads and Sync](https://www.zephyrproject.org/common-multithreading-problems-and-their-fixes/)
 - [Thread manipulation](https://docs.zephyrproject.org/latest/samples/basic/threads/README.html)
+- [RGB PWM](https://docs.zephyrproject.org/latest/samples/basic/rgb_led/README.html)
+- [RGB PWM Example](https://github.com/zephyrproject-rtos/zephyr/blob/main/boards/mikroe/hexiwear/hexiwear_mk64f12.dts)
+- [Reference to configre STM PWM](https://edgenoon-ai.github.io/edge-devices/zephyr-PWM-servo/)
