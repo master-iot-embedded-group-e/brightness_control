@@ -17,7 +17,7 @@ Hands-on lab for Embedded Platforms and Communications for IoT.
 - `feat/pwm`: Feature to have brightness control 
 - `feat/serial`: Feature for serial comms
 - `feat/ldr`: Capture the LDR input and convert into luminosity (flexibility around the units)
-- `feat/rgb`: Feature to controll the RGB (might be developed inside another feature).
+- `feat/rgb`: Feature to control the RGB (might be developed inside another feature).
 
 ## Hardware components
 - LDR
