@@ -10,6 +10,7 @@ target_sources(app PRIVATE
     src/actuator.c
     src/fsm.c
     src/producer.c
+    src/ldr.c
 )
 
 target_include_directories(app PRIVATE)

@@ -22,10 +22,9 @@ void producer_thread(void *p1, void *p2, void *p3)
             printk("ERROR: could not read LDR: %d\n", ret);
             return;
         }
-        uint16_t ldr_reading = ret;
-        printk("LDR reading: %d\n", ldr_reading);
-        printk("LDR reading as percentage: %d%%\n", raw_to_percentage(ldr_reading));
-        ldr.reading = ldr_reading; // Ejemplo: simulación de lux
+        uint8_t ldr_percentage = ret;
+        printk("LDR reading as percentage: %d%%\n", ldr_percentage);
+        ldr.reading = ldr_percentage;
         ldr.timestamp = k_uptime_get_32();
 
         /* Enviamos el dato a la cola. Si está llena, espera hasta 10ms */
