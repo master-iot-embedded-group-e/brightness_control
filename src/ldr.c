@@ -118,20 +118,26 @@ int ldr_read(uint8_t *percentage) {
         .buffer_size = sizeof(sample),
         .resolution = ADC_RESOLUTION,
     };
-    // Obtener lectura
     ret = adc_sequence_init_dt(&ldr, &sequence);
-    if (ret == 0) {
-        ret = adc_read_dt(&ldr, &sequence);
-    } else {
+    if (ret < 0) {
         printk("ERROR: could not initialize sequence: %d\n", ret);
-        return ret; // Return error code if sequence initialization failed
+    } else {
+        ret = adc_read_dt(&ldr, &sequence);
+        if (ret < 0) {
+            printk("ERROR: ADC read failed: %d\n", ret);
+        }
     }
-    printk("LDR read complete: %d\n", sample);
+
     ret = ldr_power_off();
     if (ret < 0) {
-        printk("ERROR: could not turn off LDR power\n");
-        return ret; // Return error code even if LDR power could not be turned off
+        printk("ERROR: could not turn off LDR power: %d\n", off_ret);
     }
-    // La conversión se hace aquí para que la escala del ADC no salga de ldr.c
-    return raw_to_percentage(sample);
+
+    if (ret < 0) {
+        return ret;
+    }
+    printk("LDR read complete: %d\n", sample);
+
+    *percentage = raw_to_percentage(sample);
+    return 0;
 }
