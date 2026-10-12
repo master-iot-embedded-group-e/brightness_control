@@ -32,8 +32,17 @@ Lottery:
 
 
 ## Hardware components
-- LDR
-- RGB
+### LDR
+
+Powered through a GPIO pin so it is only energized while a measurement is being taken. This minimizes power consumption and reduces unnecessary current draw when the sensor is idle. Additionally, the ADC is managed by the Device Runtime Power Management to power off the ADC when not in use in order to save energy.
+
+| LDR pinout | Board pinout |
+|---|---|
+| `-` | GND |
+| `+` | D2 |
+| `S` | A0 |
+
+### RGB
 
 ## Architecture
 The architecture is based in threads:

@@ -15,7 +15,8 @@ void fsm_thread(void *p1, void *p2, void *p3)
         /* K_FOREVER makes it blocking */
         if (k_msgq_get(&q_ldr_data, &ldr, K_FOREVER) == 0) {
 
-            if (ldr.value_lux > 25.0) {
+            // ldr.reading es un porcentaje. rehacer en otra rama.
+            if (ldr.reading > 49) {
                 rgb_pwm.blue = 100;
                 rgb_pwm.red = 100;
                 rgb_pwm.green = 100;
