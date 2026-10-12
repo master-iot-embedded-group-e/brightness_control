@@ -129,11 +129,11 @@ int ldr_read(uint8_t *percentage) {
     }
 
     int ret_off = ldr_power_off();
+    if (ret < 0) return ret;
     if (ret_off < 0) {
-        printk("ERROR: could not turn off LDR power: %d\n", ret);
+        printk("ERROR: could not turn off LDR power: %d\n", ret_off);
         return ret_off;
     }
-    if (ret < 0) return ret;
 
     printk("LDR read complete: %d\n", sample);
 
