@@ -19,7 +19,7 @@ int gpio_init(const struct gpio_dt_spec *gpio) {
     ret = gpio_pin_configure_dt(gpio, GPIO_OUTPUT_INACTIVE);
     if (ret < 0) {
         printk("ERROR GPIO: %d\n", ret);
-        return -ENODEV;
+        return ret;
     }
 
     return 0;
@@ -30,7 +30,7 @@ int gpio_power_on (const struct gpio_dt_spec *gpio) {
     ret = gpio_pin_set_dt(gpio, 1);
     if (ret < 0) {
         printk("ERROR GPIO power on: %d\n", ret);
-        return -ENODEV;
+        return ret;
     }
 
     return 0;
@@ -41,7 +41,7 @@ int gpio_power_off (const struct gpio_dt_spec *gpio) {
     ret = gpio_pin_set_dt(gpio, 0);
     if (ret < 0) {
         printk("ERROR GPIO power off: %d\n", ret);
-        return -ENODEV;
+        return ret;
     }
 
     return 0;

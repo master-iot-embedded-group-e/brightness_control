@@ -75,14 +75,14 @@ int ldr_init(void) {
 
     if (!adc_is_ready_dt(&ldr)) {
         printk("ERROR: ADC not ready\n");
-        return -ENODEV;
+        return ret;
     }
 
     // Configurar el canal mientras el ADC está activo
     ret = adc_channel_setup_dt(&ldr);
     if (ret < 0) {
         printk("ERROR: could not configure ADC: %d\n", ret);
-        return -ENODEV;
+        return ret;
     }
 
     // Habilitar Runtime PM para el dispositivo ADC
@@ -128,13 +128,16 @@ int ldr_read(uint8_t *percentage) {
         }
     }
 
-    ret = ldr_power_off();
+    int ret_off = ldr_power_off();
     if (ret < 0) {
         printk("ERROR: could not turn off LDR power: %d\n", ret);
     }
 
     if (ret < 0) {
         return ret;
+    }
+    if (ret_off < 0) {
+        return ret_off;
     }
     printk("LDR read complete: %d\n", sample);
 
