@@ -1,6 +1,7 @@
 // Primero el propio header: así el compilador comprueba que las definiciones
 // de este fichero coinciden con las declaraciones públicas.
 #include "ldr.h"
+#include "gpio.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
@@ -22,15 +23,19 @@ static const struct gpio_dt_spec ldr_power =
 
 static int ldr_power_on(void) {
     printk("Turning on LDR power\n");
-    gpio_pin_set_dt(&ldr_power, 1);
+    int ret = gpio_power_on(&ldr_power);
+    if (ret < 0) {
+        printk("ERROR: could not activate LDR power: %d\n", ret);
+        return ret;
+    }
     // Tiempo de estabilización de LDR (1ms)
     k_busy_wait(1000);
     // Reactivar ADC antes de utilizarlo
-    int ret = pm_device_runtime_get(ldr.dev);
+    ret = pm_device_runtime_get(ldr.dev);
     if (ret < 0) {
         printk("ERROR: could not reactivate ADC: %d\n", ret);
         // Apagar LDR si no se pudo reactivar el ADC
-        gpio_pin_set_dt(&ldr_power, 0);
+        gpio_power_off(&ldr_power);
         return ret;
     }
     printk("LDR power turned on\n");
@@ -52,37 +57,32 @@ static int ldr_power_off(void) {
     printk("LDR power kept on (LDR_ALWAYS_ON)\n");
 #else
     // Apagar LDR
-    gpio_pin_set_dt(&ldr_power, 0);
-    printk("LDR power turned off\n");
+    ret = gpio_power_off(&ldr_power);
+    if (ret < 0) {
+        printk("ERROR: could not deactivate LDR power: %d\n", ret);
+        return ret;
+    }
 #endif
     return 0;
 }
 
 int ldr_init(void) {
     printk("Initializing LDR\n");
-    if (!gpio_is_ready_dt(&ldr_power)) {
-        printk("ERROR: GPIO LDR not ready\n");
-        return -1;
-    }
-
     int ret;
     // Configurar GPIO para alimentar LDR
-    ret = gpio_pin_configure_dt(&ldr_power, GPIO_OUTPUT_INACTIVE);
-    if (ret < 0) {
-        printk("ERROR GPIO: %d\n", ret);
-        return -ENODEV;
-    }
+    ret = gpio_init(&ldr_power);
+    if (ret < 0) return ret;
 
     if (!adc_is_ready_dt(&ldr)) {
         printk("ERROR: ADC not ready\n");
-        return -ENODEV;
+        return -1;
     }
 
     // Configurar el canal mientras el ADC está activo
     ret = adc_channel_setup_dt(&ldr);
     if (ret < 0) {
         printk("ERROR: could not configure ADC: %d\n", ret);
-        return -ENODEV;
+        return ret;
     }
 
     // Habilitar Runtime PM para el dispositivo ADC
@@ -128,14 +128,13 @@ int ldr_read(uint8_t *percentage) {
         }
     }
 
-    ret = ldr_power_off();
-    if (ret < 0) {
-        printk("ERROR: could not turn off LDR power: %d\n", ret);
+    int ret_off = ldr_power_off();
+    if (ret < 0) return ret;
+    if (ret_off < 0) {
+        printk("ERROR: could not turn off LDR power: %d\n", ret_off);
+        return ret_off;
     }
 
-    if (ret < 0) {
-        return ret;
-    }
     printk("LDR read complete: %d\n", sample);
 
     *percentage = raw_to_percentage(sample);

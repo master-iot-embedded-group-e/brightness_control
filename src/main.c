@@ -5,7 +5,7 @@
 
 /* Instanciamos las colas de mensajes: Nombre, Tamaño del mensaje, Capacidad máxima, Alineación */
 K_MSGQ_DEFINE(q_ldr_data, sizeof(struct ldr_t), MAX_NUMBER_OF_MESSAGES, 1);
-K_MSGQ_DEFINE(q_rgb_data, sizeof(struct rgb_pwm_t), MAX_NUMBER_OF_MESSAGES, 1);
+K_MSGQ_DEFINE(q_rgb_data, sizeof(struct rgb_t), MAX_NUMBER_OF_MESSAGES, 1);
 
 // LED from the board devicetree (standard alias: led0 for LED1)
 static const struct gpio_dt_spec led_blinky = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);

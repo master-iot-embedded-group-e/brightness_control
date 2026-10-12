@@ -10,7 +10,9 @@
 
     aliases {
         ldrpower = &ldr_power;
-		led0 = &blue_led_1; 	// This is LED1 as labeled STM32WL55JC board's 
+		red = &external_led_0;
+		green = &external_led_1;
+		blue = &external_led_2;
     };
 
     leds {
@@ -19,6 +21,18 @@
         ldr_power: led_external_0 {
             gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
             label = "LDR power at D2";
+        };
+		external_led_0: led_external_1 {
+            gpios = <&gpiob 5 GPIO_ACTIVE_HIGH>;
+            label = "RED LED at D4";
+        };
+		external_led_1: led_external_2 {
+            gpios = <&gpioc 1 GPIO_ACTIVE_HIGH>;
+            label = "GREEN LED at D7";
+        };
+		external_led_2: led_external_3 {
+            gpios = <&gpioc 2 GPIO_ACTIVE_HIGH>;
+            label = "BLUE LED at D8";
         };
     };
 };

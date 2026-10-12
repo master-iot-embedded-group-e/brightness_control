@@ -11,6 +11,8 @@ target_sources(app PRIVATE
     src/fsm.c
     src/producer.c
     src/ldr.c
+    src/gpio.c
+    src/rgb.c
 )
 
 target_include_directories(app PRIVATE)

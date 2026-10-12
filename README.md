@@ -44,6 +44,14 @@ Powered through a GPIO pin so it is only energized while a measurement is being 
 
 ### RGB
 
+Powered through GPIO pins. 
+
+| LED | Board pinout |
+|---|---|
+| Red | D4 |
+| Green | D7 |
+| Blue | D8 |
+
 ## Architecture
 The architecture is based in threads:
 - `main` thread for configuring and initializing the application. But it should not perform on this thread and should be idle most of the time.

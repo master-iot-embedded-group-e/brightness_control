@@ -7,26 +7,38 @@
 void fsm_thread(void *p1, void *p2, void *p3)
 {
     struct ldr_t ldr;
-    struct rgb_pwm_t rgb_pwm;
+    struct rgb_t rgb;
+    struct rgb_t last_rgb = {0};
+    bool last_rgb_valid = false;
 
     printk("    FSM thread init   \n");
 
     while (1) {
         /* K_FOREVER makes it blocking */
         if (k_msgq_get(&q_ldr_data, &ldr, K_FOREVER) == 0) {
-
-            // ldr.reading es un porcentaje. rehacer en otra rama.
-            if (ldr.reading > 49) {
-                rgb_pwm.blue = 100;
-                rgb_pwm.red = 100;
-                rgb_pwm.green = 100;
-            } else {
-                rgb_pwm.blue = 0;
-                rgb_pwm.red = 0;
-                rgb_pwm.green = 100;
+            if (ldr.brightness < 33) {
+                rgb.blue = false;
+                rgb.red = true;
+                rgb.green = false;
+            } else if (ldr.brightness <= 66 && ldr.brightness >= 33) {
+                rgb.blue = false;
+                rgb.red = true;
+                rgb.green = true;
+            } else if (ldr.brightness > 66) {
+                rgb.blue = false;
+                rgb.red = false;
+                rgb.green = true;
             }
 
-            k_msgq_put(&q_rgb_data, &rgb_pwm, K_MSEC(10));
+            if (!last_rgb_valid ||
+                rgb.red != last_rgb.red ||
+                rgb.green != last_rgb.green ||
+                rgb.blue != last_rgb.blue) {
+                if (k_msgq_put(&q_rgb_data, &rgb, K_MSEC(10)) == 0) {
+                    last_rgb = rgb;
+                    last_rgb_valid = true;
+                }
+            }
         }
     }
 }

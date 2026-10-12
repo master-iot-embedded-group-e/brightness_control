@@ -6,14 +6,14 @@
 
 /* 1. Estructuras de datos que viajan entre hilos */
 struct ldr_t {
-    uint16_t reading;
+    uint16_t brightness;
     uint32_t timestamp;
 };
 
-struct rgb_pwm_t {
-    uint8_t blue;
-    uint8_t red;
-    uint8_t green;
+struct rgb_t {
+    bool blue;
+    bool red;
+    bool green;
 };
 
 /*

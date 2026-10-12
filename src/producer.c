@@ -23,7 +23,7 @@ void producer_thread(void *p1, void *p2, void *p3)
             return;
         }
         printk("LDR reading as percentage: %d%%\n", ldr_percentage);
-        ldr.reading = ldr_percentage;
+        ldr.brightness = 100 - ldr_percentage;
         ldr.timestamp = k_uptime_get_32();
 
         /* Enviamos el dato a la cola. Si está llena, espera hasta 10ms */
