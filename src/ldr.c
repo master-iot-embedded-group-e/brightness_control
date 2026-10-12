@@ -75,7 +75,7 @@ int ldr_init(void) {
 
     if (!adc_is_ready_dt(&ldr)) {
         printk("ERROR: ADC not ready\n");
-        return ret;
+        return -1;
     }
 
     // Configurar el canal mientras el ADC está activo
@@ -129,16 +129,12 @@ int ldr_read(uint8_t *percentage) {
     }
 
     int ret_off = ldr_power_off();
-    if (ret < 0) {
-        printk("ERROR: could not turn off LDR power: %d\n", ret);
-    }
-
-    if (ret < 0) {
-        return ret;
-    }
     if (ret_off < 0) {
+        printk("ERROR: could not turn off LDR power: %d\n", ret);
         return ret_off;
     }
+    if (ret < 0) return ret;
+
     printk("LDR read complete: %d\n", sample);
 
     *percentage = raw_to_percentage(sample);
