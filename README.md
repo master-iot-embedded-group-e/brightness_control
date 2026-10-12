@@ -55,7 +55,7 @@ Powered through GPIO pins.
 ### How to have agnostic hardware logic
 Omar has a common-cathode RGB LED and Carlos a common-anode RGB LED. How can we configure this abstraction?
 
-This document explains how to add an additional flag for an additional overlay, as [EXTRA_DTC_OVERLAY_FILE](zephyr/doc/build/dts/howtos.rst). So the command compilation should be different for each person.
+This document explains how to add an additional flag for an additional overlay, as [EXTRA_DTC_OVERLAY_FILE](https://github.com/zephyrproject-rtos/zephyr/blob/v4.4.2/doc/build/dts/howtos.rst?plain=1#L220-L320). So the command compilation should be different for each person.
 
 For Carlos it has that extra flag at the end:
 ```json
