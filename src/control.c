@@ -4,11 +4,17 @@
 #define STACK_SIZE 1024
 #define PRIORITY 6 // Set higher priority for fast processing
 
+enum{
+    NORMAL,
+    BLUE,
+    OFF
+} Fsm_t;
+
 void fsm_thread(void *p1, void *p2, void *p3)
 {
-    struct ldr_t ldr;
-    struct rgb_t rgb;
-    struct rgb_t last_rgb = {0};
+    ldr_t ldr;
+    rgb_t rgb;
+    rgb_t last_rgb = {0};
     bool last_rgb_valid = false;
 
     printk("    FSM thread init   \n");

@@ -5,9 +5,9 @@
 #define STACK_SIZE 1024
 #define PRIORITY 7
 
-void hilo_actuador_run(void *p1, void *p2, void *p3)
+void actuator_thread_run(void *p1, void *p2, void *p3)
 {
-    struct rgb_t rgb;
+    rgb_t rgb;
     int ret = rgb_init();
     if (ret < 0) {
         printk("Error initializing RGB\n");
@@ -37,5 +37,5 @@ void hilo_actuador_run(void *p1, void *p2, void *p3)
     }
 }
 
-K_THREAD_DEFINE(hilo_actuador_id, STACK_SIZE, hilo_actuador_run,
+K_THREAD_DEFINE(actuator_thread_id, STACK_SIZE, actuator_thread_run,
                 NULL, NULL, NULL, PRIORITY, 0, 0);

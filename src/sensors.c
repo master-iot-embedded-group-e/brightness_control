@@ -7,7 +7,7 @@
 
 void producer_thread(void *p1, void *p2, void *p3)
 {
-    struct ldr_t ldr;
+    ldr_t ldr;
 
     printk("    Producer thread init   \n");
     if (ldr_init() < 0) {
