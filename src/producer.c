@@ -16,13 +16,12 @@ void producer_thread(void *p1, void *p2, void *p3)
     }
 
     while (1) {
-        int16_t ret;
-        ret = ldr_read();
+        uint8_t ldr_percentage;
+        int ret = ldr_read(&ldr_percentage);
         if (ret < 0) {
             printk("ERROR: could not read LDR: %d\n", ret);
             return;
         }
-        uint8_t ldr_percentage = ret;
         printk("LDR reading as percentage: %d%%\n", ldr_percentage);
         ldr.reading = ldr_percentage;
         ldr.timestamp = k_uptime_get_32();
