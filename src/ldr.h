@@ -8,6 +8,9 @@
 
 #define ADC_RESOLUTION 12
 
+// 1 = no apagar la alimentación de la LDR tras cada lectura (solo depuración)
+#define LDR_ALWAYS_ON 1
+
 static const struct adc_dt_spec ldr =
     ADC_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), ldr);
 static const struct gpio_dt_spec ldr_power =
@@ -38,9 +41,16 @@ static int ldr_power_off(void) {
         printk("ERROR: could not release ADC: %d\n", ret);
         return ret;
     }
+#if LDR_ALWAYS_ON
+    // Depuración: D2 se queda en alto para poder medir el divisor con el
+    // multímetro.
+    // El ADC sí se libera arriba, así que el runtime PM sigue equilibrado.
+    printk("LDR power kept on (LDR_ALWAYS_ON)\n");
+#else
     // Apagar LDR
     gpio_pin_set_dt(&ldr_power, 0);
     printk("LDR power turned off\n");
+#endif
     return 0;
 }
 
