@@ -13,7 +13,7 @@
 #define ADC_RESOLUTION 12
 
 // 1 = no apagar la alimentación de la LDR tras cada lectura (solo depuración)
-#define LDR_ALWAYS_ON 1
+#define LDR_ALWAYS_ON 0
 
 static const struct adc_dt_spec ldr =
     ADC_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), ldr);
