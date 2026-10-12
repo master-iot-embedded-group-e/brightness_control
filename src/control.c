@@ -12,7 +12,7 @@ enum{
 
 void fsm_thread(void *p1, void *p2, void *p3)
 {
-    ldr_t ldr;
+    sensor_data_t sensor_data;
     rgb_t rgb;
     rgb_t last_rgb = {0};
     bool last_rgb_valid = false;
@@ -21,16 +21,16 @@ void fsm_thread(void *p1, void *p2, void *p3)
 
     while (1) {
         /* K_FOREVER makes it blocking */
-        if (k_msgq_get(&q_ldr_data, &ldr, K_FOREVER) == 0) {
-            if (ldr.brightness < 33) {
+        if (k_msgq_get(&q_sensor_data, &sensor_data, K_FOREVER) == 0) {
+            if (sensor_data.ldr.brightness < 33) {
                 rgb.blue = false;
                 rgb.red = true;
                 rgb.green = false;
-            } else if (ldr.brightness <= 66 && ldr.brightness >= 33) {
+            } else if (sensor_data.ldr.brightness <= 66 && sensor_data.ldr.brightness >= 33) {
                 rgb.blue = false;
                 rgb.red = true;
                 rgb.green = true;
-            } else if (ldr.brightness > 66) {
+            } else if (sensor_data.ldr.brightness > 66) {
                 rgb.blue = false;
                 rgb.red = false;
                 rgb.green = true;

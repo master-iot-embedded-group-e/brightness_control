@@ -25,10 +25,10 @@ typedef struct {
     button_press_duration_t duration;
 } button_press_t;
 
-typedef struct actuator_data_t{
+typedef struct {
     button_press_t button_press;
-    rgb_t rgb;
-};
+    ldr_t ldr;
+} sensor_data_t;
 
 /*
 Read https://docs.zephyrproject.org/latest/kernel/services/data_passing/message_queues.html#defining-a-message-queue

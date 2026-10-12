@@ -7,7 +7,7 @@
 
 void producer_thread(void *p1, void *p2, void *p3)
 {
-    ldr_t ldr;
+    sensor_data_t sensor_data;
 
     printk("    Producer thread init   \n");
     if (ldr_init() < 0) {
@@ -23,11 +23,11 @@ void producer_thread(void *p1, void *p2, void *p3)
             return;
         }
         printk("LDR reading as percentage: %d%%\n", ldr_percentage);
-        ldr.brightness = 100 - ldr_percentage;
-        ldr.timestamp = k_uptime_get_32();
+        sensor_data.ldr.brightness = 100 - ldr_percentage;
+        sensor_data.ldr.timestamp = k_uptime_get_32();
 
         /* Enviamos el dato a la cola. Si está llena, espera hasta 10ms */
-        k_msgq_put(&q_ldr_data, &ldr, K_MSEC(10));
+        k_msgq_put(&q_sensor_data, &sensor_data, K_MSEC(10));
 
         k_msleep(2000);
     }
