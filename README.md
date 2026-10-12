@@ -52,6 +52,31 @@ Powered through GPIO pins.
 | Green | D7 |
 | Blue | D8 |
 
+### How to have agnostic hardware logic
+Omar has a common-cathode RGB LED and Carlos a common-anode RGB LED. How can we configure this abstraction?
+
+This document explains how to add an additional flag for an additional overlay, as [EXTRA_DTC_OVERLAY_FILE](zephyr/doc/build/dts/howtos.rst). So the command compilation should be different for each person.
+
+For Carlos it has that extra flag at the end:
+```json
+"label": "Linux: Build",
+    "type": "shell",
+    "command": "west",
+    "args": [
+    "build",
+    "-p", "auto",
+    "-b", "$ZEPHYR_BOARD",
+    "$PROJECT_DIR",
+    "-d", "$BUILD_DIR",
+    "--",
+    "-DUSER_CACHE_DIR=$CACHE_DIR",
+    "-DBOARD_FLASH_RUNNER=openocd",
+    "-DBOARD_DEBUG_RUNNER=openocd",
+    "-DUSE_CCACHE=0",
+    "-DEXTRA_DTC_OVERLAY_FILE=boards/common_anode.overlay"
+    ],
+```
+
 ## Architecture
 The architecture is based in threads:
 - `main` thread for configuring and initializing the application. But it should not perform on this thread and should be idle most of the time.

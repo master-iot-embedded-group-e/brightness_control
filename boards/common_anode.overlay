@@ -1,0 +1,6 @@
+/* For common anode RGB */
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+&external_led_0 { gpios = <&gpiob 5 GPIO_ACTIVE_LOW>; };
+&external_led_1 { gpios = <&gpioc 1 GPIO_ACTIVE_LOW>; };
+&external_led_2 { gpios = <&gpioc 2 GPIO_ACTIVE_LOW>; };
