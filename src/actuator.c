@@ -54,7 +54,9 @@ void hilo_actuador_run(void *p1, void *p2, void *p3)
         if (k_msgq_get(&q_rgb_data, &rgb_pwm_dummy, K_FOREVER) == 0) {
 
             /* Polarity (common anode/cathode) is handled by the DT flags, not here */
-            check_pwm_ready();
+            if (check_pwm_ready() < 0) {
+                return;
+            }
             // Demo function to cycle through RGB PWM values. Delete this in production.
             pwm_demo(&rgb_pwm, &color_selector); 
             // End of section for feat/pwm
