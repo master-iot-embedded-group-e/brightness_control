@@ -70,19 +70,19 @@ int ldr_init(void) {
     ret = gpio_pin_configure_dt(&ldr_power, GPIO_OUTPUT_INACTIVE);
     if (ret < 0) {
         printk("ERROR GPIO: %d\n", ret);
-        return ret;
+        return -ENODEV;
     }
 
     if (!adc_is_ready_dt(&ldr)) {
         printk("ERROR: ADC not ready\n");
-        return -1;
+        return -ENODEV;
     }
 
     // Configurar el canal mientras el ADC está activo
     ret = adc_channel_setup_dt(&ldr);
     if (ret < 0) {
         printk("ERROR: could not configure ADC: %d\n", ret);
-        return ret;
+        return -ENODEV;
     }
 
     // Habilitar Runtime PM para el dispositivo ADC
@@ -100,13 +100,17 @@ static uint8_t raw_to_percentage(uint16_t raw) {
     return (raw * 100) / ((1 << ADC_RESOLUTION) - 1);
 }
 
-int16_t ldr_read(void) {
-    int ret;
-    ret = ldr_power_on();
+int ldr_read(uint8_t *percentage) {
+    if (percentage == NULL) {
+        return -EINVAL;
+    }
+
+    int ret = ldr_power_on();
     if (ret < 0) {
         printk("ERROR: could not turn on LDR power: %d\n", ret);
-        return ret; // Return error code if LDR power could not be turned on
+        return ret;
     }
+
     printk("Reading LDR value\n");
     uint16_t sample;
     struct adc_sequence sequence = {
