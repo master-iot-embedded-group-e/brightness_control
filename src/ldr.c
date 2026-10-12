@@ -73,6 +73,11 @@ int ldr_init(void) {
     ret = gpio_init(&ldr_power);
     if (ret < 0) return ret;
 
+    if (!adc_is_ready_dt(&ldr)) {
+        printk("ERROR: ADC not ready\n");
+        return -ENODEV;
+    }
+
     // Configurar el canal mientras el ADC está activo
     ret = adc_channel_setup_dt(&ldr);
     if (ret < 0) {

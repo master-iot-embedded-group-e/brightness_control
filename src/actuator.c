@@ -7,7 +7,7 @@
 
 void hilo_actuador_run(void *p1, void *p2, void *p3)
 {
-    struct rgb_pwm_t rgb_pwm;
+    struct rgb_t rgb;
     int ret = rgb_init();
     if (ret < 0) {
         printk("Error initializing RGB\n");
@@ -17,10 +17,22 @@ void hilo_actuador_run(void *p1, void *p2, void *p3)
     printk("    Actuator thread init   \n");
 
     while (1) {
-        if (k_msgq_get(&q_rgb_data, &rgb_pwm, K_FOREVER) == 0) {
-            red_on();
-            green_on();
-            blue_on();
+        if (k_msgq_get(&q_rgb_data, &rgb, K_FOREVER) == 0) {
+            if (rgb.red) {
+                red_on();
+            } else {
+                red_off();
+            }
+            if (rgb.green) {
+                green_on();
+            } else {
+                green_off();
+            }
+            if (rgb.blue) {
+                blue_on();
+            } else {
+                blue_off();
+            }
         }
     }
 }
