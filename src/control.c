@@ -38,12 +38,12 @@ static void fsm(Fsm_t *state, sensor_data_t *sensor_data, Rgb_state_t *rgb_state
 		break;
 
 	case LONG_PRESS:
-		*state = BLUE;
+		*state = OFF;
 		break;
 	
 	default:
 		*state = NORMAL;
-		printk("FSM: Unexpected press button duration");
+		printk("FSM: Unexpected press button duration\n");
 		break;
 	}
 
@@ -69,7 +69,7 @@ static void fsm(Fsm_t *state, sensor_data_t *sensor_data, Rgb_state_t *rgb_state
 		break;
 
 	default:
-		printk("FSM: Unexpected state");
+		printk("FSM: Unexpected state\n");
 		break;
 	}
 
