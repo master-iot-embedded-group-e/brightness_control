@@ -2,52 +2,105 @@
 #include "interface.h"
 
 #define STACK_SIZE 1024
-#define PRIORITY 6 // Set higher priority for fast processing
+#define PRIORITY   6 // Set higher priority for fast processing
 
-enum{
-    NORMAL,
-    BLUE,
-    OFF
+typedef enum {
+	BLUE,
+	NORMAL,
+	OFF
 } Fsm_t;
+
+typedef struct {
+	rgb_t rgb;
+	rgb_t last_rgb;
+	bool new_rgb_values;
+} Rgb_state_t;
+
+static bool rgb_equal(const rgb_t *a, const rgb_t *b)
+{
+	return a->red == b->red && a->green == b->green && a->blue == b->blue;
+}
+
+static void set_rgb_color(Rgb_state_t *rgb_state, bool red, bool green, bool blue)
+{
+	rgb_state->rgb.blue = blue;
+	rgb_state->rgb.red = red;
+	rgb_state->rgb.green = green;
+	rgb_state->new_rgb_values = !rgb_equal(&rgb_state->rgb, &rgb_state->last_rgb);
+}
+
+static void fsm(Fsm_t *state, sensor_data_t *sensor_data, Rgb_state_t *rgb_state)
+{
+	switch ((sensor_data->button_press.duration))
+	{
+	case SHORT_PRESS:
+		*state = (*state + NORMAL) & 0x01;
+		break;
+
+	case LONG_PRESS:
+		*state = BLUE;
+		break;
+	
+	default:
+		*state = NORMAL;
+		printk("FSM: Unexpected press button duration");
+		break;
+	}
+
+	switch ((uint8_t)*state) {
+	case NORMAL:
+		if (sensor_data->ldr.brightness < 33) {
+			set_rgb_color(rgb_state, true, false, false);
+
+		} else if (sensor_data->ldr.brightness <= 66 && sensor_data->ldr.brightness >= 33) {
+			set_rgb_color(rgb_state, true, true, false);
+
+		} else if (sensor_data->ldr.brightness > 66) {
+			set_rgb_color(rgb_state, false, true, false);
+		}
+		break;
+
+	case BLUE:
+		set_rgb_color(rgb_state, false, true, true);
+		break;
+
+	case OFF:
+		set_rgb_color(rgb_state, false, false, false);
+		break;
+
+	default:
+		printk("FSM: Unexpected state");
+		break;
+	}
+
+	if (rgb_state->new_rgb_values == false) {
+		// return to avoid waken up the actuator thread
+		return;
+	}
+
+	if (k_msgq_put(&q_rgb_data, &rgb_state->rgb, K_MSEC(10)) == 0) {
+		rgb_state->last_rgb = rgb_state->rgb;
+	}
+}
 
 void fsm_thread(void *p1, void *p2, void *p3)
 {
-    sensor_data_t sensor_data;
-    rgb_t rgb;
-    rgb_t last_rgb = {0};
-    bool last_rgb_valid = false;
+	sensor_data_t sensor_data;
+	Fsm_t fsm_state = NORMAL;
+	Rgb_state_t rgb_state = {
+		.last_rgb = {0},
+		.rgb = {0},
+		.new_rgb_values = false,
+	};
 
-    printk("    FSM thread init   \n");
+	printk("    FSM thread init   \n");
 
-    while (1) {
-        /* K_FOREVER makes it blocking */
-        if (k_msgq_get(&q_sensor_data, &sensor_data, K_FOREVER) == 0) {
-            if (sensor_data.ldr.brightness < 33) {
-                rgb.blue = false;
-                rgb.red = true;
-                rgb.green = false;
-            } else if (sensor_data.ldr.brightness <= 66 && sensor_data.ldr.brightness >= 33) {
-                rgb.blue = false;
-                rgb.red = true;
-                rgb.green = true;
-            } else if (sensor_data.ldr.brightness > 66) {
-                rgb.blue = false;
-                rgb.red = false;
-                rgb.green = true;
-            }
-
-            if (!last_rgb_valid ||
-                rgb.red != last_rgb.red ||
-                rgb.green != last_rgb.green ||
-                rgb.blue != last_rgb.blue) {
-                if (k_msgq_put(&q_rgb_data, &rgb, K_MSEC(10)) == 0) {
-                    last_rgb = rgb;
-                    last_rgb_valid = true;
-                }
-            }
-        }
-    }
+	while (1) {
+		/* K_FOREVER makes it blocking */
+		if (k_msgq_get(&q_sensor_data, &sensor_data, K_FOREVER) == 0) {
+			fsm(&fsm_state, &sensor_data, &rgb_state);
+		}
+	}
 }
 
-K_THREAD_DEFINE(fsm_thread_id, STACK_SIZE, fsm_thread,
-                NULL, NULL, NULL, PRIORITY, 0, 0);
+K_THREAD_DEFINE(fsm_thread_id, STACK_SIZE, fsm_thread, NULL, NULL, NULL, PRIORITY, 0, 0);

@@ -17,8 +17,8 @@ typedef struct {
 } rgb_t;
 
 typedef enum{
-    SHORT,
-    LONG
+    SHORT_PRESS,
+    LONG_PRESS
 } button_press_duration_t;
 
 typedef struct {
