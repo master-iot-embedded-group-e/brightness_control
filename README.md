@@ -89,6 +89,8 @@ To avoid problems between the threads, queued messages will be used. The referen
 
 The interface is defined in `src/interface.h`, with one structure for producer data and another for actuator data.
 
+## FSM
+
 ## Testing
 
 ## References

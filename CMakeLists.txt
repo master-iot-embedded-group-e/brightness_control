@@ -8,8 +8,8 @@ project(brightness_control)
 target_sources(app PRIVATE
     src/main.c
     src/actuator.c
-    src/fsm.c
-    src/producer.c
+    src/control.c
+    src/sensors.c
     src/ldr.c
     src/gpio.c
     src/rgb.c
