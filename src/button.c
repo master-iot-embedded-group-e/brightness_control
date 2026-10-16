@@ -20,8 +20,7 @@ K_WORK_DELAYABLE_DEFINE(long_work, long_handler);
  */
 static void send_event(enum button_event event) {
     struct button_events_t message = {
-        .event = event,
-        .timestamp = k_uptime_get_32()
+        .event = event
     };
     if (k_msgq_put(&q_button_data, &message, K_NO_WAIT) != 0)
         printk("Button event queue full\n");
@@ -47,8 +46,12 @@ static void long_handler(struct k_work *work) {
  */
 static void debounce_handler(struct k_work *work) {
     int level = gpio_get_value(&button);
-    // Ignore invalid levels or unchanged state.
-    if (level < 0 || (level == 1) == held) return;
+    if (level < 0) {
+        printk("ERROR: reading button level\n");
+        return;
+    }
+    // Ignore unchanged state (possible with button bouncing).
+    if ((level == 1) == held) return;
 
     held = (level == 1);
     // If the button is now held, start the long press timer.
@@ -67,10 +70,9 @@ static void debounce_handler(struct k_work *work) {
     // Calculate the duration the button was held.
     uint32_t duration = k_uptime_get_32() - pressed_at;
     // Determine if the button press qualifies as a long or short press.
-    if (duration >= LONG_PRESS_DELAY_MS)
-        send_event(BUTTON_LONG_PRESS);
-    else
-        send_event(BUTTON_SHORT_PRESS);
+    duration >= LONG_PRESS_DELAY_MS 
+        ? send_event(BUTTON_LONG_PRESS) 
+        : send_event(BUTTON_SHORT_PRESS);
 }
 
 static void button_changed(

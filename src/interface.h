@@ -20,7 +20,6 @@ struct rgb_t {
 
 struct button_events_t {
     enum button_event event;
-    uint32_t timestamp;
 };
 
 /*
