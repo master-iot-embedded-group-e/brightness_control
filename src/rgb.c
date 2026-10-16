@@ -16,13 +16,13 @@ static const struct gpio_dt_spec blue =
 
 int rgb_init(void) {
     int ret;
-    ret = gpio_init(&red);
+    ret = gpio_output_init(&red);
     if (ret < 0) return ret;
 
-    ret = gpio_init(&green);
+    ret = gpio_output_init(&green);
     if (ret < 0) return ret;
 
-    ret = gpio_init(&blue);
+    ret = gpio_output_init(&blue);
     if (ret < 0) return ret;
 
     return 0;
