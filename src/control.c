@@ -58,7 +58,7 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 
 	switch ((uint8_t)*state) {
 	case NORMAL:
-		LOG_DBG("fsm: NORMAL");		
+		LOG_INF("fsm: NORMAL");		
 		if (ldr->brightness < 33) {
 			set_rgb_color(rgb_state, true, false, false);
 
@@ -71,17 +71,17 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		break;
 
 	case BLUE:
-		LOG_DBG("fsm: BLUE");		
+		LOG_INF("fsm: BLUE");		
 		set_rgb_color(rgb_state, false, false, true);
 		break;
 
 	case OFF:
-		LOG_DBG("fsm: OFF");		
+		LOG_INF("fsm: OFF");		
 		set_rgb_color(rgb_state, false, false, false);
 		break;
 
 	default:
-		LOG_ERR("Unexpected state: %d", (uint8_t)*state);
+		LOG_WRN("Unexpected state: %d", (uint8_t)*state);
 		break;
 	}
 
