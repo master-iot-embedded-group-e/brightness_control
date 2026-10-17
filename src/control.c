@@ -37,6 +37,7 @@ static void set_rgb_color(Rgb_state_t *rgb_state, bool red, bool green, bool blu
 
 static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of_event_t *button_event)
 {
+	// State evaluation
 	Fsm_t new_state = *state;
 	switch (*button_event)
 	{
@@ -72,6 +73,7 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 	// Reset event driven variables for the next one
 	*button_event = NO_PRESSED;
 
+	// Evaluate outputs
 	switch ((uint8_t)*state) {
 	case NORMAL:
 		k_event_post(&e_enable_devices, EV_ADC_ON);	
