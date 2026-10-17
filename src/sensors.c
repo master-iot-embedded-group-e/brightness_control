@@ -1,6 +1,7 @@
 #include <zephyr/kernel.h>
 #include "interface.h"
 #include "ldr.h"
+#include "button.h"
 
 #define STACK_SIZE 1024
 #define PRIORITY 7
@@ -8,11 +9,22 @@
 void producer_thread(void *p1, void *p2, void *p3)
 {
     ldr_t ldr;
+	int err = 0;
 
     printk("    Producer thread init   \n");
-    if (ldr_init() < 0) {
-        printk("ERROR: could not initialize LDR\n");
+
+	err = ldr_init();
+    if (err < 0) {
+        printk("ERROR: could not initialize LDR. %d\n", err);
+		printk("ERROR: Producer will not start\n");
         return;
+    }
+
+	err = button_init();
+	if (err < 0) {
+		printk("ERROR: could not initialize the buttons. %d\n", err);
+		printk("ERROR: Producer will not start\n");
+		return;
     }
 
     while (1) {

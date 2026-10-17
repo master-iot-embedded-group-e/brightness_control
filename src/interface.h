@@ -3,8 +3,6 @@
 #define INTERFACE_H
 
 #include <zephyr/kernel.h>
-#include "button.h"
-
 
 /* 1. Estructuras de datos que viajan entre hilos */
 typedef struct {

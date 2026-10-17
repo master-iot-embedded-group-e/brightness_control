@@ -92,7 +92,7 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 	}
 }
 
-void fsm_thread(void *p1, void *p2, void *p3)
+void control_thread(void *p1, void *p2, void *p3)
 {
 	ldr_t ldr_data;
 	Fsm_t fsm_state = NORMAL;
@@ -101,23 +101,23 @@ void fsm_thread(void *p1, void *p2, void *p3)
 		.rgb = {0},
 		.new_rgb_values = false,
 	};
-
-	printk("    FSM thread init   \n");
-
-	button_init();
     button_type_of_event_t button_event = NO_PRESSED;
+	
+	// Create poll structures
     struct k_poll_event events[2] = {
-        K_POLL_EVENT_INITIALIZER(
-            K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
+		K_POLL_EVENT_INITIALIZER(
+			K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
             K_POLL_MODE_NOTIFY_ONLY, 
             &q_button_data
         ),
         K_POLL_EVENT_INITIALIZER(
-            K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
+			K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
             K_POLL_MODE_NOTIFY_ONLY, 
             &q_ldr_data
         )
     };
+
+	printk("    FSM thread init   \n");
 
 	while (1) {
 
@@ -162,4 +162,4 @@ void fsm_thread(void *p1, void *p2, void *p3)
 	}
 }
 
-K_THREAD_DEFINE(fsm_thread_id, STACK_SIZE, fsm_thread, NULL, NULL, NULL, PRIORITY, 0, 0);
+K_THREAD_DEFINE(control_thread_id, STACK_SIZE, control_thread, NULL, NULL, NULL, PRIORITY, 0, 0);
