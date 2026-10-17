@@ -49,7 +49,7 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 	
 	default:
 		//*state = NORMAL;
-		LOG_ERR("FSM: Unexpected press button duration: %d\n", *button_event);
+		LOG_ERR("FSM: Unexpected press button duration: %d", *button_event);
 		break;
 	}
 
@@ -58,7 +58,7 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 
 	switch ((uint8_t)*state) {
 	case NORMAL:
-		LOG_DBG("fsm: NORMAL\n");		
+		LOG_DBG("fsm: NORMAL");		
 		if (ldr->brightness < 33) {
 			set_rgb_color(rgb_state, true, false, false);
 
@@ -71,17 +71,17 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		break;
 
 	case BLUE:
-		LOG_DBG("fsm: BLUE\n");		
+		LOG_DBG("fsm: BLUE");		
 		set_rgb_color(rgb_state, false, true, true);
 		break;
 
 	case OFF:
-		LOG_DBG("fsm: OFF\n");		
+		LOG_DBG("fsm: OFF");		
 		set_rgb_color(rgb_state, false, false, false);
 		break;
 
 	default:
-		LOG_ERR("Unexpected state: %d\n", (uint8_t)*state);
+		LOG_ERR("Unexpected state: %d", (uint8_t)*state);
 		break;
 	}
 
@@ -128,7 +128,7 @@ void control_thread(void *p1, void *p2, void *p3)
 		events[1].state = K_POLL_STATE_NOT_READY;
 	}
 	
-	LOG_INF("thread init\n");
+	LOG_INF("thread init");
 
 	while (1) {
 
@@ -144,15 +144,15 @@ void control_thread(void *p1, void *p2, void *p3)
 			while (k_msgq_get(&q_button_data, &button_event, K_NO_WAIT) == 0) {
 				switch (button_event) {
 				case BUTTON_SHORT_PRESS:
-					LOG_INF("short press\n");
+					LOG_INF("short press");
 					break;
 				case BUTTON_LONG_PRESS:
-					LOG_INF("long press\n");
+					LOG_INF("long press");
 					break;
 				case NO_PRESSED:
 					break;
 				default:
-					LOG_WRN("unexpected button event type: %d\n", button_event);
+					LOG_WRN("unexpected button event type: %d", button_event);
 				break;
 				}
 				fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);

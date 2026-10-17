@@ -16,25 +16,25 @@ void producer_thread(void *p1, void *p2, void *p3)
 		
 	err = ldr_init();
     if (err < 0) {
-		LOG_ERR("ERROR: could not initialize LDR. %d\n", err);
-		LOG_ERR("ERROR: Producer will not start\n");
+		LOG_ERR("ERROR: could not initialize LDR. %d", err);
+		LOG_ERR("ERROR: Producer will not start");
         return;
     }
 	
 	err = button_init();
 	if (err < 0) {
-		LOG_ERR("ERROR: could not initialize the buttons. %d\n", err);
-		LOG_ERR("ERROR: Producer will not start\n");
+		LOG_ERR("ERROR: could not initialize the buttons. %d", err);
+		LOG_ERR("ERROR: Producer will not start");
 		return;
     }
 	
-	LOG_INF("thread init\n");
+	LOG_INF("thread init");
 
     while (1) {
         uint8_t ldr_percentage;
         int ret = ldr_read(&ldr_percentage);
         if (ret < 0) {
-            LOG_ERR("ERROR: could not read LDR: %d\n", ret);
+            LOG_ERR("ERROR: could not read LDR: %d", ret);
             return;
         }
         // Convert LDR reading to brightness (inverted percentage)

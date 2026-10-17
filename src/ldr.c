@@ -28,10 +28,10 @@ static const struct gpio_dt_spec ldr_power =
     GPIO_DT_SPEC_GET(DT_ALIAS(ldrpower), gpios);
 
 static int ldr_power_on(void) {
-    LOG_DBG("Turning on LDR power\n");
+    LOG_DBG("Turning on LDR power");
     int ret = gpio_power_on(&ldr_power);
     if (ret < 0) {
-        LOG_ERR("could not activate LDR power: %d\n", ret);
+        LOG_ERR("could not activate LDR power: %d", ret);
         return ret;
     }
     // Wait for the voltage to stabilize before reading.
@@ -39,30 +39,30 @@ static int ldr_power_on(void) {
     // Ensure the ADC is active before attempting to read from it.
     ret = pm_device_runtime_get(ldr.dev);
     if (ret < 0) {
-        LOG_ERR("could not reactivate ADC: %d\n", ret);
+        LOG_ERR("could not reactivate ADC: %d", ret);
         // Turn off the LDR power if the ADC could not be reactivated.
         gpio_power_off(&ldr_power);
         return ret;
     }
-    LOG_DBG("LDR power turned on\n");
+    LOG_DBG("LDR power turned on");
     return 0;
 }
 
 static int ldr_power_off(void) {
-    LOG_DBG("Turning off LDR power\n");
+    LOG_DBG("Turning off LDR power");
     // Release the ADC device before turning off the LDR power.
     int ret = pm_device_runtime_put(ldr.dev);
     if (ret < 0) {
-        LOG_ERR("could not release ADC: %d\n", ret);
+        LOG_ERR("could not release ADC: %d", ret);
         return ret;
     }
 #if LDR_ALWAYS_ON
-    LOG_DBG("LDR power kept on (LDR_ALWAYS_ON)\n");
+    LOG_DBG("LDR power kept on (LDR_ALWAYS_ON)");
 #else
     // Turn off the LDR power.
     ret = gpio_power_off(&ldr_power);
     if (ret < 0) {
-        LOG_ERR("could not deactivate LDR power: %d\n", ret);
+        LOG_ERR("could not deactivate LDR power: %d", ret);
         return ret;
     }
 #endif
@@ -70,32 +70,31 @@ static int ldr_power_off(void) {
 }
 
 int ldr_init(void) {
-    LOG_INF("init\n");
     int ret;
     // Initialize the GPIO that powers the LDR.
     ret = gpio_output_init(&ldr_power);
     if (ret < 0) return ret;
 
     if (!adc_is_ready_dt(&ldr)) {
-        LOG_ERR("ADC not ready\n");
+        LOG_ERR("ADC not ready");
         return -1;
     }
 
     // Set up the ADC channel while the ADC is active.
     ret = adc_channel_setup_dt(&ldr);
     if (ret < 0) {
-        LOG_ERR("could not configure ADC: %d\n", ret);
+        LOG_ERR("could not configure ADC: %d", ret);
         return ret;
     }
 
     // Enable Runtime PM for the ADC device.
     ret = pm_device_runtime_enable(ldr.dev);
     if (ret < 0) {
-        LOG_ERR("could not enable Runtime PM: %d\n", ret);
+        LOG_ERR("could not enable Runtime PM: %d", ret);
         return ret;
     }
     
-    LOG_INF("init complete\n");
+    LOG_INF("init");
     return 0;
 }
 
@@ -110,11 +109,11 @@ int ldr_read(uint8_t *percentage) {
 
     int ret = ldr_power_on();
     if (ret < 0) {
-        LOG_ERR("could not turn on LDR power: %d\n", ret);
+        LOG_ERR("could not turn on LDR power: %d", ret);
         return ret;
     }
 
-    LOG_DBG("Reading LDR value\n");
+    LOG_DBG("Reading LDR value");
     uint16_t sample;
     struct adc_sequence sequence = {
         .buffer = &sample,
@@ -123,22 +122,22 @@ int ldr_read(uint8_t *percentage) {
     };
     ret = adc_sequence_init_dt(&ldr, &sequence);
     if (ret < 0) {
-        LOG_ERR("could not initialize sequence: %d\n", ret);
+        LOG_ERR("could not initialize sequence: %d", ret);
     } else {
         ret = adc_read_dt(&ldr, &sequence);
         if (ret < 0) {
-            LOG_ERR("ADC read failed: %d\n", ret);
+            LOG_ERR("ADC read failed: %d", ret);
         }
     }
 
     int ret_off = ldr_power_off();
     if (ret < 0) return ret;
     if (ret_off < 0) {
-        LOG_ERR("could not turn off LDR power: %d\n", ret_off);
+        LOG_ERR("could not turn off LDR power: %d", ret_off);
         return ret_off;
     }
 
-    LOG_DBG("LDR read complete: %d\n", sample);
+    LOG_DBG("LDR read complete: %d", sample);
 
     *percentage = raw_to_percentage(sample);
     return 0;

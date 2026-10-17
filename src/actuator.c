@@ -13,11 +13,11 @@ void actuator_thread_run(void *p1, void *p2, void *p3)
     rgb_t rgb;
     int ret = rgb_init();
     if (ret < 0) {
-        LOG_ERR("initializing RGB\n");
+        LOG_ERR("initializing RGB");
         return;
     }
 
-    LOG_INF("thread init   \n");
+    LOG_INF("thread init");
 
     while (1) {
         if (k_msgq_get(&q_rgb_data, &rgb, K_FOREVER) == 0) {
