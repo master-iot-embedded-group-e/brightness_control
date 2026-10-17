@@ -14,7 +14,7 @@ typedef enum {
 	NORMAL,
 	OFF
 } Fsm_t;
-char* state_string[3] = {"BLUE", "NORMAL", "OFF"};
+static const char* state_string[3] = {"BLUE", "NORMAL", "OFF"};
 
 typedef struct {
 	rgb_t rgb;
@@ -60,7 +60,12 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 	// Evaluate and store new state
 	if (*state != new_state)
 	{
-		LOG_INF("fsm: %s", state_string[new_state]);	
+		LOG_INF("fsm: %s", state_string[new_state]);
+		if (new_state == OFF)
+		{
+			LOG_INF("System OFF");
+		}
+			
 	}
 	*state = new_state;
 
@@ -89,7 +94,6 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 	case OFF:
 		set_rgb_color(rgb_state, false, false, false);
 		k_event_clear(&e_enable_devices, EV_ADC_ON);
-		LOG_INF("System OFF");
 		break;
 
 	default:
@@ -144,7 +148,7 @@ void control_thread(void *p1, void *p2, void *p3)
 	}
 	
 	LOG_INF("thread init");
-	LOG_INF("fsm: %s", state_string[NORMAL]);	
+	LOG_INF("fsm: %s", state_string[fsm_state]);	
 
 	while (1) {
 
