@@ -7,7 +7,6 @@
 /* 1. Estructuras de datos que viajan entre hilos */
 typedef struct {
     uint16_t brightness;
-    uint32_t timestamp;
 } ldr_t;
 
 typedef struct {

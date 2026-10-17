@@ -37,7 +37,6 @@ void producer_thread(void *p1, void *p2, void *p3)
         printk("LDR reading as percentage: %d%%\n", ldr_percentage);
         // Convert LDR reading to brightness (inverted percentage)
         ldr.brightness = 100 - ldr_percentage; 
-        ldr.timestamp = k_uptime_get_32();
 
         // Send the LDR data to the message queue. If the queue is full, wait up to 10ms.
         k_msgq_put(&q_ldr_data, &ldr, K_MSEC(10));

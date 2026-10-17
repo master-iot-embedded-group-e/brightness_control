@@ -94,7 +94,9 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 
 void control_thread(void *p1, void *p2, void *p3)
 {
-	ldr_t ldr_data;
+	ldr_t ldr_data = {
+		.brightness = 0,
+	};
 	Fsm_t fsm_state = NORMAL;
 	Rgb_state_t rgb_state = {
 		.last_rgb = {0},
@@ -118,6 +120,12 @@ void control_thread(void *p1, void *p2, void *p3)
     };
 
 	printk("    FSM thread init   \n");
+
+	// Wait for the first valid LDR measurement before starting the control logic
+	if (k_msgq_get(&q_ldr_data, &ldr_data, K_FOREVER) == 0) { 
+		// Zephyr API requests to reset the event state after attending it.
+		events[1].state = K_POLL_STATE_NOT_READY;
+	}
 
 	while (1) {
 
@@ -153,7 +161,7 @@ void control_thread(void *p1, void *p2, void *p3)
 		else if(events[1].state == K_POLL_STATE_MSGQ_DATA_AVAILABLE)
 		{
 			// Queued lectures would be read in the next lopp as k_poll would return another one.
-			if (k_msgq_get(&q_ldr_data, &ldr_data, K_NO_WAIT) == 0) {
+			if (k_msgq_get(&q_ldr_data, &ldr_data, K_NO_WAIT) == 0) { 
 				fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
 				// Zephyr API requests to reset the event state after attending it.
 				events[1].state = K_POLL_STATE_NOT_READY;
