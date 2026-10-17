@@ -19,25 +19,14 @@ button switches between three operating modes:
 ## Gitflow conventions
 - Follow standard gitflow for features
 - `develop` is the default branch.
-- Conventional Commits rules are followed.
+- To make changes a Pull Request to `develop` must be opened.
 
 ## Features to develop
 - `feat/fsm`: Finite State Machine that manages the business logic.
 - `feat/button`: Generate events from short and long presses.
 - `feat/ldr`: Capture the LDR input and convert into luminosity (flexibility around the units).
 - `feat/rgbLeds`: Control the RGB LED.
-- `feat/serial`: Serial comms included in feat/fsm.
-
-### How the tasks are assigned
-Lottery:
-- Omar
-    - feat/serial
-    - feat/ldr
-    - feat/rgbLeds
-- Carlos
-    - feat/fsm
-    - feat/button
-    - feat/serial
+- `feat/serial`: Serial comms.
 
 ## Build and flash
 
@@ -93,7 +82,7 @@ Powered through GPIO pins.
 | Green | D7 |
 | Blue | D8 |
 
-### How to have agnostic hardware logic
+#### How to have agnostic hardware logic
 Omar has a common-cathode RGB LED and Carlos a common-anode RGB LED. How can we configure this abstraction?
 
 The answer is the devicetree. The application code only sets a LED *active* or *inactive*
@@ -126,7 +115,8 @@ The button logic relies on its interrupt (both edges) and two delayable works:
 
 - `debounce_work`: every edge *reschedules* it 60 ms later, so it only runs once the signal has been
   stable for 60 ms. It then reads the button level and, on release, sends a `BUTTON_SHORT_PRESS`
-  unless a long press was already sent.
+  unless a `BUTTON_LONG_PRESS` was already sent or the press qualifies as a `BUTTON_LONG_PRESS` 
+  and `long_work` did not send the event yet.
 - `long_work`: scheduled when the button is pressed. If the button is still held after 1000 ms, it
   sends a `BUTTON_LONG_PRESS` immediately, without waiting for the release. A `long_sent` flag stops
   the release from also producing a short press.
@@ -147,6 +137,14 @@ Three states, driven by two events from the button:
 ![FSM hand-drawn diagram](docs/fsm.jpeg)
 
 `fsm()` is a Mealy machine, called on every button event and every LDR sample. It has three parts:
+
+1. **Evaluate the button event** (previously explained).
+2. **Commit the state:** store the new state, log it if it changed, and clear the button event to
+  not handle it again on the next LDR sample.
+3. **Update the outputs:** in `NORMAL`, enable ADC sampling and select RED below 33%, YELLOW from
+  33% through 66%, or GREEN above 66%. In `BLUE`, show blue and disable ADC sampling. In `OFF`,
+  turn the LED off and disable ADC sampling. Send an RGB message to the actuator only when colour
+  needs to be changed.
 
 ## Interfaces
 To avoid problems between the threads, data is passed through [message queues](https://github.com/zephyrproject-rtos/zephyr/blob/v4.4.2/doc/kernel/services/data_passing/message_queues.rst?plain=1).
@@ -171,7 +169,7 @@ every line shows a timestamp, the level and the module. Levels follow their mean
 
 ## Testing
 
-Tested by hand on the NUCLEO-WL55JC:
+Tested by hand on the NUCLEO-WL55JC board:
 
 | Test | Expected |
 |---|---|
