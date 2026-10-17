@@ -19,22 +19,11 @@ typedef struct {
 } rgb_t;
 
 typedef enum{
+    NO_PRESSED,
     BUTTON_SHORT_PRESS,
     BUTTON_LONG_PRESS,
-} button_event_t;
+} button_type_of_event_t;
 
-typedef struct {
-    button_event_t duration;
-} button_press_t;
-
-typedef struct {
-    button_press_t button_press;
-    ldr_t ldr;
-} sensor_data_t;
-
-struct button_events_t {
-    enum button_event event;
-};
 
 /*
 Read https://docs.zephyrproject.org/latest/kernel/services/data_passing/message_queues.html#defining-a-message-queue
@@ -43,6 +32,5 @@ Read https://docs.zephyrproject.org/latest/kernel/services/data_passing/message_
 extern struct k_msgq q_ldr_data;
 extern struct k_msgq q_rgb_data;
 extern struct k_msgq q_button_data;
-extern struct k_msgq q_sensor_data;
 
 #endif /* INTERFACE_H */

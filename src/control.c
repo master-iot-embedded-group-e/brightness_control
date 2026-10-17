@@ -29,15 +29,15 @@ static void set_rgb_color(Rgb_state_t *rgb_state, bool red, bool green, bool blu
 	rgb_state->new_rgb_values = !rgb_equal(&rgb_state->rgb, &rgb_state->last_rgb);
 }
 
-static void fsm(Fsm_t *state, sensor_data_t *sensor_data, Rgb_state_t *rgb_state)
+static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of_event_t button_event)
 {
-	switch ((sensor_data->button_press.duration))
+	switch ((button_event))
 	{
-	case SHORT_PRESS:
+	case BUTTON_SHORT_PRESS:
 		*state = (*state + NORMAL) & 0x01;
 		break;
 
-	case LONG_PRESS:
+	case BUTTON_LONG_PRESS:
 		*state = OFF;
 		break;
 	
@@ -49,13 +49,13 @@ static void fsm(Fsm_t *state, sensor_data_t *sensor_data, Rgb_state_t *rgb_state
 
 	switch ((uint8_t)*state) {
 	case NORMAL:
-		if (sensor_data->ldr.brightness < 33) {
+		if (ldr->brightness < 33) {
 			set_rgb_color(rgb_state, true, false, false);
 
-		} else if (sensor_data->ldr.brightness <= 66 && sensor_data->ldr.brightness >= 33) {
+		} else if (ldr->brightness <= 66 && ldr->brightness >= 33) {
 			set_rgb_color(rgb_state, true, true, false);
 
-		} else if (sensor_data->ldr.brightness > 66) {
+		} else if (ldr->brightness > 66) {
 			set_rgb_color(rgb_state, false, true, false);
 		}
 		break;
@@ -85,7 +85,7 @@ static void fsm(Fsm_t *state, sensor_data_t *sensor_data, Rgb_state_t *rgb_state
 
 void fsm_thread(void *p1, void *p2, void *p3)
 {
-	sensor_data_t sensor_data;
+	ldr_t ldr_data;
 	Fsm_t fsm_state = NORMAL;
 	Rgb_state_t rgb_state = {
 		.last_rgb = {0},
@@ -96,7 +96,7 @@ void fsm_thread(void *p1, void *p2, void *p3)
 	printk("    FSM thread init   \n");
 
 	button_init();
-    struct button_events_t button_event;
+    button_type_of_event_t button_event;
     struct k_poll_event events[] = {
         K_POLL_EVENT_INITIALIZER(
             K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
@@ -117,19 +117,22 @@ void fsm_thread(void *p1, void *p2, void *p3)
 		}
 
 		while (k_msgq_get(&q_button_data, &button_event, K_NO_WAIT) == 0) {
-			switch (button_event.event) {
+			switch (button_event) {
 			case BUTTON_SHORT_PRESS:
 				printk("FSM: short press\n");
 				break;
 			case BUTTON_LONG_PRESS:
 				printk("FSM: long press\n");
 				break;
-			}
+			default:
+				printk("FSM: Unexpected button event type\n");
+			break;
+			}			
 		}
-		
+
 		/* K_FOREVER makes it blocking */
-		if (k_msgq_get(&q_sensor_data, &sensor_data, K_FOREVER) == 0) {
-			fsm(&fsm_state, &sensor_data, &rgb_state);
+		if (k_msgq_get(&q_ldr_data, &ldr_data, K_NO_WAIT) == 0) {
+			fsm(&fsm_state, &ldr_data, &rgb_state, button_event);
 		}
 	}
 }

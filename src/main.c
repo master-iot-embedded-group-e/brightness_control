@@ -4,9 +4,9 @@
 #include "interface.h"
 
 // Instantiating message queues for LDR, RGB, and Button data
-K_MSGQ_DEFINE(q_ldr_data, sizeof(struct ldr_t), MAX_NUMBER_OF_MESSAGES, 1);
-K_MSGQ_DEFINE(q_rgb_data, sizeof(struct rgb_t), MAX_NUMBER_OF_MESSAGES, 1);
-K_MSGQ_DEFINE(q_button_data, sizeof(struct button_events_t), MAX_NUMBER_OF_MESSAGES, 1);
+K_MSGQ_DEFINE(q_ldr_data, sizeof(ldr_t), MAX_NUMBER_OF_MESSAGES, 1);
+K_MSGQ_DEFINE(q_rgb_data, sizeof(rgb_t), MAX_NUMBER_OF_MESSAGES, 1);
+K_MSGQ_DEFINE(q_button_data, sizeof(button_type_of_event_t), MAX_NUMBER_OF_MESSAGES, 1);
 
 int main(void)
 {

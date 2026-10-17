@@ -7,7 +7,7 @@
 
 void producer_thread(void *p1, void *p2, void *p3)
 {
-    sensor_data_t sensor_data;
+    ldr_t ldr;
 
     printk("    Producer thread init   \n");
     if (ldr_init() < 0) {

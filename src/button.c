@@ -8,21 +8,22 @@
 
 static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(DT_ALIAS(sw1), gpios);
 static struct gpio_callback callback;
+
+// Event handling
 static uint32_t pressed_at;
 static bool held, long_sent;
 static void debounce_handler(struct k_work *work);
 static void long_handler(struct k_work *work);
+
+// Sync mechanism
 K_WORK_DELAYABLE_DEFINE(debounce_work, debounce_handler);
 K_WORK_DELAYABLE_DEFINE(long_work, long_handler);
 
 /**
  * Send a button event to the message queue.
  */
-static void send_event(enum button_event event) {
-    struct button_events_t message = {
-        .event = event
-    };
-    if (k_msgq_put(&q_button_data, &message, K_NO_WAIT) != 0)
+static void send_event(button_type_of_event_t event) {
+    if (k_msgq_put(&q_button_data, &event, K_NO_WAIT) != 0)
         printk("Button event queue full\n");
 }
 
