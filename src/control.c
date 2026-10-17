@@ -14,6 +14,7 @@ typedef enum {
 	NORMAL,
 	OFF
 } Fsm_t;
+char* state_string[3] = {"BLUE", "NORMAL", "OFF"};
 
 typedef struct {
 	rgb_t rgb;
@@ -36,14 +37,15 @@ static void set_rgb_color(Rgb_state_t *rgb_state, bool red, bool green, bool blu
 
 static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of_event_t *button_event)
 {
+	Fsm_t new_state = *state;
 	switch (*button_event)
 	{
 	case BUTTON_SHORT_PRESS:
-		*state = (*state + NORMAL) & 0x01;
+		new_state = (*state + NORMAL) & 0x01;
 		break;
 
 	case BUTTON_LONG_PRESS:
-		*state = OFF;
+		new_state = OFF;
 		break;
 
 	case NO_PRESSED:
@@ -55,12 +57,18 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		break;
 	}
 
+	// Evaluate and store new state
+	if (*state != new_state)
+	{
+		LOG_INF("fsm: %s", state_string[new_state]);	
+	}
+	*state = new_state;
+
 	// Reset event driven variables for the next one
 	*button_event = NO_PRESSED;
 
 	switch ((uint8_t)*state) {
 	case NORMAL:
-		LOG_INF("fsm: NORMAL");	
 		k_event_post(&e_enable_devices, EV_ADC_ON);	
 		if (ldr->brightness < 33) {
 			set_rgb_color(rgb_state, true, false, false);
@@ -74,15 +82,14 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		break;
 
 	case BLUE:
-		LOG_INF("fsm: BLUE");		
 		set_rgb_color(rgb_state, false, false, true);
 		k_event_clear(&e_enable_devices, EV_ADC_ON);
 		break;
 
 	case OFF:
-		LOG_INF("fsm: OFF");		
 		set_rgb_color(rgb_state, false, false, false);
 		k_event_clear(&e_enable_devices, EV_ADC_ON);
+		LOG_INF("System OFF");
 		break;
 
 	default:
@@ -127,8 +134,7 @@ void control_thread(void *p1, void *p2, void *p3)
         )
     };
 
-	// Init the event object.
-	k_event_init(&e_enable_devices);
+	// Enable at init the ADC measurements.
 	k_event_post(&e_enable_devices, EV_ADC_ON);	
 
 	// Wait for the first valid LDR measurement before starting the control logic
@@ -138,6 +144,7 @@ void control_thread(void *p1, void *p2, void *p3)
 	}
 	
 	LOG_INF("thread init");
+	LOG_INF("fsm: %s", state_string[NORMAL]);	
 
 	while (1) {
 

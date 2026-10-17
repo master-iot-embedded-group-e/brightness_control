@@ -44,7 +44,10 @@ void producer_thread(void *p1, void *p2, void *p3)
 		// Send the LDR data to the message queue. If the queue is full, wait up to 10ms.
 		k_msgq_put(&q_ldr_data, &ldr, K_MSEC(10));	
 		
+		// Periodic sleep
         k_msleep(2000);
+
+		// If the ADC is marked as disabled it waits here
 		k_event_wait(&e_enable_devices, EV_ADC_ON, false, K_FOREVER);
     }
 }
