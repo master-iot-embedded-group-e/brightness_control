@@ -1,20 +1,23 @@
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include "interface.h"
 #include "rgb.h"
 
 #define STACK_SIZE 1024
 #define PRIORITY 7
 
+LOG_MODULE_REGISTER(actuator, LOG_LEVEL_INF);
+
 void actuator_thread_run(void *p1, void *p2, void *p3)
 {
     rgb_t rgb;
     int ret = rgb_init();
     if (ret < 0) {
-        printk("Error initializing RGB\n");
+        LOG_ERR("initializing RGB\n");
         return;
     }
 
-    printk("    Actuator thread init   \n");
+    LOG_INF("thread init   \n");
 
     while (1) {
         if (k_msgq_get(&q_rgb_data, &rgb, K_FOREVER) == 0) {
