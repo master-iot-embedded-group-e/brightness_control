@@ -13,40 +13,50 @@ static const struct gpio_dt_spec green =
 static const struct gpio_dt_spec blue =
     GPIO_DT_SPEC_GET(DT_ALIAS(blue), gpios);
 
-int rgb_init(void) {
+int rgb_init(void)
+{
     int ret;
     ret = gpio_output_init(&red);
-    if (ret < 0) return ret;
+    if (ret < 0)
+        return ret;
 
     ret = gpio_output_init(&green);
-    if (ret < 0) return ret;
+    if (ret < 0)
+        return ret;
 
     ret = gpio_output_init(&blue);
-    if (ret < 0) return ret;
+    if (ret < 0)
+        return ret;
 
     return 0;
 }
 
-int red_on(void) {
+int red_on(void)
+{
     return gpio_power_on(&red);
 }
 
-int red_off(void) {
+int red_off(void)
+{
     return gpio_power_off(&red);
 }
 
-int green_on(void) {
+int green_on(void)
+{
     return gpio_power_on(&green);
 }
 
-int green_off(void) {
+int green_off(void)
+{
     return gpio_power_off(&green);
 }
 
-int blue_on(void) {
+int blue_on(void)
+{
     return gpio_power_on(&blue);
 }
 
-int blue_off(void) {
+int blue_off(void)
+{
     return gpio_power_off(&blue);
 }

@@ -11,47 +11,51 @@ LOG_MODULE_REGISTER(sensors, LOG_LEVEL_INF);
 
 void producer_thread(void *p1, void *p2, void *p3)
 {
-    ldr_t ldr;
-    uint8_t ldr_percentage;
+	ldr_t ldr;
+	uint8_t ldr_percentage;
 	int err = 0;
-		
+
 	err = ldr_init();
-    if (err < 0) {
+	if (err < 0)
+	{
 		LOG_ERR("ERROR: could not initialize LDR. %d", err);
 		LOG_ERR("ERROR: Producer will not start");
-        return;
-    }
-	
+		return;
+	}
+
 	err = button_init();
-	if (err < 0) {
+	if (err < 0)
+	{
 		LOG_ERR("ERROR: could not initialize the buttons. %d", err);
 		LOG_ERR("ERROR: Producer will not start");
 		return;
-    }
-	
+	}
+
 	LOG_INF("thread init");
 
-    while (1) {
+	while (1)
+	{
 		err = ldr_read(&ldr_percentage);
-		if (err < 0) {
+		if (err < 0)
+		{
 			LOG_ERR("ERROR: could not read LDR: %d", err);
 			return;
 		}
 		// Convert LDR reading to brightness (inverted percentage)
-		ldr.brightness = 100 - ldr_percentage; 
+		ldr.brightness = 100 - ldr_percentage;
 		LOG_INF("LDR reading: %d%%", ldr.brightness);
-		
+
 		// Send the LDR data to the message queue. If the queue is full, wait up to 10ms.
-		k_msgq_put(&q_ldr_data, &ldr, K_MSEC(10));	
-		
+		k_msgq_put(&q_ldr_data, &ldr, K_MSEC(10));
+
 		// Periodic sleep
-        k_msleep(2000);
+		k_msleep(2000);
 
 		// If the ADC is marked as disabled it waits here
 		k_event_wait(&e_enable_devices, EV_ADC_ON, false, K_FOREVER);
-    }
+	}
 }
 
 // Register and start the producer thread automatically using Zephyr's macro.
 K_THREAD_DEFINE(producer_thread_id, STACK_SIZE, producer_thread,
-                NULL, NULL, NULL, PRIORITY, 0, 0);
+				NULL, NULL, NULL, PRIORITY, 0, 0);

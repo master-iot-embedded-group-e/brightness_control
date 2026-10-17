@@ -3,20 +3,22 @@
 #include "interface.h"
 
 #define STACK_SIZE 1024
-#define PRIORITY   6 // Set higher priority for fast processing
+#define PRIORITY 6 // Set higher priority for fast processing
 
 LOG_MODULE_REGISTER(control, LOG_LEVEL_INF);
 
 K_EVENT_DEFINE(e_enable_devices);
 
-typedef enum {
+typedef enum
+{
 	BLUE,
 	NORMAL,
 	OFF
 } Fsm_t;
-static const char* state_string[3] = {"BLUE", "NORMAL", "OFF"};
+static const char *state_string[3] = {"BLUE", "NORMAL", "OFF"};
 
-typedef struct {
+typedef struct
+{
 	rgb_t rgb;
 	rgb_t last_rgb;
 	bool new_rgb_values;
@@ -51,7 +53,7 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 
 	case NO_PRESSED:
 		break;
-	
+
 	default:
 		//*state = NORMAL;
 		LOG_ERR("FSM: Unexpected press button duration: %d", *button_event);
@@ -66,7 +68,6 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		{
 			LOG_INF("System OFF");
 		}
-			
 	}
 	*state = new_state;
 
@@ -74,16 +75,20 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 	*button_event = NO_PRESSED;
 
 	// Evaluate outputs
-	switch ((uint8_t)*state) {
+	switch ((uint8_t)*state)
+	{
 	case NORMAL:
-		k_event_post(&e_enable_devices, EV_ADC_ON);	
-		if (ldr->brightness < 33) {
+		k_event_post(&e_enable_devices, EV_ADC_ON);
+		if (ldr->brightness < 33)
+		{
 			set_rgb_color(rgb_state, true, false, false);
-
-		} else if (ldr->brightness <= 66 && ldr->brightness >= 33) {
+		}
+		else if (ldr->brightness <= 66 && ldr->brightness >= 33)
+		{
 			set_rgb_color(rgb_state, true, true, false);
-
-		} else if (ldr->brightness > 66) {
+		}
+		else if (ldr->brightness > 66)
+		{
 			set_rgb_color(rgb_state, false, true, false);
 		}
 		break;
@@ -103,12 +108,14 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		break;
 	}
 
-	if (rgb_state->new_rgb_values == false) {
+	if (rgb_state->new_rgb_values == false)
+	{
 		// return to avoid waken up the actuator thread
 		return;
 	}
 
-	if (k_msgq_put(&q_rgb_data, &rgb_state->rgb, K_MSEC(10)) == 0) {
+	if (k_msgq_put(&q_rgb_data, &rgb_state->rgb, K_MSEC(10)) == 0)
+	{
 		rgb_state->last_rgb = rgb_state->rgb;
 	}
 }
@@ -124,49 +131,51 @@ void control_thread(void *p1, void *p2, void *p3)
 		.rgb = {0},
 		.new_rgb_values = false,
 	};
-    button_type_of_event_t button_event = NO_PRESSED;
-	
+	button_type_of_event_t button_event = NO_PRESSED;
+
 	// Create poll structures
-    struct k_poll_event events[2] = {
+	struct k_poll_event events[2] = {
 		K_POLL_EVENT_INITIALIZER(
 			K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
-            K_POLL_MODE_NOTIFY_ONLY, 
-            &q_button_data
-        ),
-        K_POLL_EVENT_INITIALIZER(
+			K_POLL_MODE_NOTIFY_ONLY,
+			&q_button_data),
+		K_POLL_EVENT_INITIALIZER(
 			K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
-            K_POLL_MODE_NOTIFY_ONLY, 
-            &q_ldr_data
-        )
-    };
+			K_POLL_MODE_NOTIFY_ONLY,
+			&q_ldr_data)};
 
 	// Enable at init the ADC measurements.
-	k_event_post(&e_enable_devices, EV_ADC_ON);	
+	k_event_post(&e_enable_devices, EV_ADC_ON);
 
 	// Wait for the first valid LDR measurement before starting the control logic
-	if (k_msgq_get(&q_ldr_data, &ldr_data, K_FOREVER) == 0) { 
+	if (k_msgq_get(&q_ldr_data, &ldr_data, K_FOREVER) == 0)
+	{
 		// Zephyr API requests to reset the event state after attending it.
 		events[1].state = K_POLL_STATE_NOT_READY;
 	}
-	
+
 	LOG_INF("thread init");
 	LOG_INF("fsm: %s", state_string[fsm_state]);
 	// This first call has ldr data so the LED turns on without additional 2 sec wait
 	fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
 
-	while (1) {
+	while (1)
+	{
 
 		// This is where the thread actually stops until new events
-		if (k_poll(events, ARRAY_SIZE(events), K_FOREVER) != 0) {
+		if (k_poll(events, ARRAY_SIZE(events), K_FOREVER) != 0)
+		{
 			continue;
 		}
 
 		// Zephyr API doc/kernel/services/polling.rst
-		if(events[0].state == K_POLL_STATE_MSGQ_DATA_AVAILABLE)
+		if (events[0].state == K_POLL_STATE_MSGQ_DATA_AVAILABLE)
 		{
 			// We need a loop in case there are several events in he queue
-			while (k_msgq_get(&q_button_data, &button_event, K_NO_WAIT) == 0) {
-				switch (button_event) {
+			while (k_msgq_get(&q_button_data, &button_event, K_NO_WAIT) == 0)
+			{
+				switch (button_event)
+				{
 				case BUTTON_SHORT_PRESS:
 					LOG_INF("short press");
 					break;
@@ -177,7 +186,7 @@ void control_thread(void *p1, void *p2, void *p3)
 					break;
 				default:
 					LOG_WRN("unexpected button event type: %d", button_event);
-				break;
+					break;
 				}
 				fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
 				// Zephyr API requests to reset the event state after attending it.
@@ -185,15 +194,16 @@ void control_thread(void *p1, void *p2, void *p3)
 				events[0].state = K_POLL_STATE_NOT_READY;
 			}
 		}
-		else if(events[1].state == K_POLL_STATE_MSGQ_DATA_AVAILABLE)
+		else if (events[1].state == K_POLL_STATE_MSGQ_DATA_AVAILABLE)
 		{
 			// Queued lectures would be read in the next lopp as k_poll would return another one.
-			if (k_msgq_get(&q_ldr_data, &ldr_data, K_NO_WAIT) == 0) { 
+			if (k_msgq_get(&q_ldr_data, &ldr_data, K_NO_WAIT) == 0)
+			{
 				fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
 				// Zephyr API requests to reset the event state after attending it.
 				events[1].state = K_POLL_STATE_NOT_READY;
 			}
-		}				
+		}
 	}
 }
 
