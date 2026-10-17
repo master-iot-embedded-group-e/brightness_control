@@ -30,4 +30,8 @@ extern struct k_msgq q_ldr_data;
 extern struct k_msgq q_rgb_data;
 extern struct k_msgq q_button_data;
 
+// Event to signal de ADC to stop
+#define EV_ADC_ON BIT(0)
+extern struct k_event e_enable_devices;
+
 #endif /* INTERFACE_H */

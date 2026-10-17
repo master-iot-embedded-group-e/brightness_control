@@ -103,3 +103,4 @@ The interface is defined in `src/interface.h`, with one structure for producer d
 - [Threads and Sync](https://www.zephyrproject.org/common-multithreading-problems-and-their-fixes/)
 - [Thread manipulation](https://docs.zephyrproject.org/latest/samples/basic/threads/README.html)
 - [Logging](https://github.com/zephyrproject-rtos/zephyr/blob/v4.4.2/doc/services/logging/index.rst?plain=1)
+- [Sync events](https://github.com/zephyrproject-rtos/zephyr/blob/v4.4.2/doc/kernel/services/synchronization/events.rst?plain=1)

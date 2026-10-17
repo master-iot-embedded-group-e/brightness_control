@@ -7,6 +7,8 @@
 
 LOG_MODULE_REGISTER(control, LOG_LEVEL_INF);
 
+K_EVENT_DEFINE(e_enable_devices);
+
 typedef enum {
 	BLUE,
 	NORMAL,
@@ -58,7 +60,8 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 
 	switch ((uint8_t)*state) {
 	case NORMAL:
-		LOG_INF("fsm: NORMAL");		
+		LOG_INF("fsm: NORMAL");	
+		k_event_post(&e_enable_devices, EV_ADC_ON);	
 		if (ldr->brightness < 33) {
 			set_rgb_color(rgb_state, true, false, false);
 
@@ -73,11 +76,13 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 	case BLUE:
 		LOG_INF("fsm: BLUE");		
 		set_rgb_color(rgb_state, false, false, true);
+		k_event_clear(&e_enable_devices, EV_ADC_ON);
 		break;
 
 	case OFF:
 		LOG_INF("fsm: OFF");		
 		set_rgb_color(rgb_state, false, false, false);
+		k_event_clear(&e_enable_devices, EV_ADC_ON);
 		break;
 
 	default:
@@ -121,6 +126,10 @@ void control_thread(void *p1, void *p2, void *p3)
             &q_ldr_data
         )
     };
+
+	// Init the event object.
+	k_event_init(&e_enable_devices);
+	k_event_post(&e_enable_devices, EV_ADC_ON);	
 
 	// Wait for the first valid LDR measurement before starting the control logic
 	if (k_msgq_get(&q_ldr_data, &ldr_data, K_FOREVER) == 0) { 
