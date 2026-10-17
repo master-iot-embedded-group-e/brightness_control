@@ -1,4 +1,5 @@
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include "interface.h"
 #include "ldr.h"
 #include "button.h"
@@ -6,24 +7,26 @@
 #define STACK_SIZE 1024
 #define PRIORITY 7
 
+LOG_MODULE_REGISTER(sensors, LOG_LEVEL_INF);
+
 void producer_thread(void *p1, void *p2, void *p3)
 {
     ldr_t ldr;
 	int err = 0;
 
-    printk("    Producer thread init   \n");
+    LOG_INF("    Producer thread init   \n");
 
 	err = ldr_init();
     if (err < 0) {
-        printk("ERROR: could not initialize LDR. %d\n", err);
-		printk("ERROR: Producer will not start\n");
+        LOG_ERR("ERROR: could not initialize LDR. %d\n", err);
+		LOG_ERR("ERROR: Producer will not start\n");
         return;
     }
 
 	err = button_init();
 	if (err < 0) {
-		printk("ERROR: could not initialize the buttons. %d\n", err);
-		printk("ERROR: Producer will not start\n");
+		LOG_ERR("ERROR: could not initialize the buttons. %d\n", err);
+		LOG_ERR("ERROR: Producer will not start\n");
 		return;
     }
 
@@ -31,10 +34,10 @@ void producer_thread(void *p1, void *p2, void *p3)
         uint8_t ldr_percentage;
         int ret = ldr_read(&ldr_percentage);
         if (ret < 0) {
-            printk("ERROR: could not read LDR: %d\n", ret);
+            LOG_ERR("ERROR: could not read LDR: %d\n", ret);
             return;
         }
-        printk("LDR reading as percentage: %d%%\n", ldr_percentage);
+        LOG_INF("LDR reading: %d%%\n", ldr_percentage);
         // Convert LDR reading to brightness (inverted percentage)
         ldr.brightness = 100 - ldr_percentage; 
 

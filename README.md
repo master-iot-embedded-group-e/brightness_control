@@ -14,7 +14,6 @@ Hands-on lab for Embedded Platforms and Communications for IoT.
 ## Features to develop
 - `feat/fsm`: Finite State Machine that manages the business logic.
 - `feat/short_long_button_press`: Feature to generate events from short and long presses
-- `feat/pwm`: Feature to have brightness control 
 - `feat/serial`: Feature for serial comms
 - `feat/ldr`: Capture the LDR input and convert into luminosity (flexibility around the units)
 - `feat/rgb`: Feature to control the RGB (might be developed inside another feature).
@@ -103,3 +102,4 @@ The interface is defined in `src/interface.h`, with one structure for producer d
 ## References
 - [Threads and Sync](https://www.zephyrproject.org/common-multithreading-problems-and-their-fixes/)
 - [Thread manipulation](https://docs.zephyrproject.org/latest/samples/basic/threads/README.html)
+- [Logging](https://github.com/zephyrproject-rtos/zephyr/blob/v4.4.2/doc/services/logging/index.rst?plain=1)
