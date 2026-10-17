@@ -37,9 +37,9 @@ void producer_thread(void *p1, void *p2, void *p3)
             LOG_ERR("ERROR: could not read LDR: %d\n", ret);
             return;
         }
-        LOG_INF("LDR reading: %d%%\n", ldr_percentage);
         // Convert LDR reading to brightness (inverted percentage)
         ldr.brightness = 100 - ldr_percentage; 
+        LOG_INF("LDR reading: %d%%", ldr.brightness);
 
         // Send the LDR data to the message queue. If the queue is full, wait up to 10ms.
         k_msgq_put(&q_ldr_data, &ldr, K_MSEC(10));
