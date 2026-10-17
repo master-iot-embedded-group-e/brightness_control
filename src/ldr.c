@@ -13,7 +13,10 @@
 
 #define ADC_RESOLUTION 12
 
-// 1 = no apagar la alimentación de la LDR tras cada lectura (solo depuración)
+/*
+ * Define whether the LDR should always remain powered on or not
+ * (1 = always on for debugging purposes, 0 = power off after each read)
+ */
 #define LDR_ALWAYS_ON 0
 
 static const struct adc_dt_spec ldr =
@@ -28,13 +31,13 @@ static int ldr_power_on(void) {
         printk("ERROR: could not activate LDR power: %d\n", ret);
         return ret;
     }
-    // Tiempo de estabilización de LDR (1ms)
+    // Wait for the voltage to stabilize before reading.
     k_busy_wait(1000);
-    // Reactivar ADC antes de utilizarlo
+    // Ensure the ADC is active before attempting to read from it.
     ret = pm_device_runtime_get(ldr.dev);
     if (ret < 0) {
         printk("ERROR: could not reactivate ADC: %d\n", ret);
-        // Apagar LDR si no se pudo reactivar el ADC
+        // Turn off the LDR power if the ADC could not be reactivated.
         gpio_power_off(&ldr_power);
         return ret;
     }
@@ -44,19 +47,16 @@ static int ldr_power_on(void) {
 
 static int ldr_power_off(void) {
     printk("Turning off LDR power\n");
-    // Liberar ADC después de la lectura
+    // Release the ADC device before turning off the LDR power.
     int ret = pm_device_runtime_put(ldr.dev);
     if (ret < 0) {
         printk("ERROR: could not release ADC: %d\n", ret);
         return ret;
     }
 #if LDR_ALWAYS_ON
-    // Depuración: D2 se queda en alto para poder medir el divisor con el
-    // multímetro.
-    // El ADC sí se libera arriba, así que el runtime PM sigue equilibrado.
     printk("LDR power kept on (LDR_ALWAYS_ON)\n");
 #else
-    // Apagar LDR
+    // Turn off the LDR power.
     ret = gpio_power_off(&ldr_power);
     if (ret < 0) {
         printk("ERROR: could not deactivate LDR power: %d\n", ret);
@@ -69,8 +69,8 @@ static int ldr_power_off(void) {
 int ldr_init(void) {
     printk("Initializing LDR\n");
     int ret;
-    // Configurar GPIO para alimentar LDR
-    ret = gpio_init(&ldr_power);
+    // Initialize the GPIO that powers the LDR.
+    ret = gpio_output_init(&ldr_power);
     if (ret < 0) return ret;
 
     if (!adc_is_ready_dt(&ldr)) {
@@ -78,14 +78,14 @@ int ldr_init(void) {
         return -1;
     }
 
-    // Configurar el canal mientras el ADC está activo
+    // Set up the ADC channel while the ADC is active.
     ret = adc_channel_setup_dt(&ldr);
     if (ret < 0) {
         printk("ERROR: could not configure ADC: %d\n", ret);
         return ret;
     }
 
-    // Habilitar Runtime PM para el dispositivo ADC
+    // Enable Runtime PM for the ADC device.
     ret = pm_device_runtime_enable(ldr.dev);
     if (ret < 0) {
         printk("ERROR: could not enable Runtime PM: %d\n", ret);

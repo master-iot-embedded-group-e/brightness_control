@@ -13,6 +13,7 @@ target_sources(app PRIVATE
     src/ldr.c
     src/gpio.c
     src/rgb.c
+    src/button.c
 )
 
 target_include_directories(app PRIVATE)

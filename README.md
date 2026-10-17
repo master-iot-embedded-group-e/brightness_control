@@ -76,6 +76,9 @@ For Carlos it has that extra flag at the end:
     "-DEXTRA_DTC_OVERLAY_FILE=boards/common_anode.overlay"
     ],
 ```
+### Button
+
+Button B2 already integrated in the board.
 
 ## Architecture
 The architecture is based in threads:
@@ -83,6 +86,10 @@ The architecture is based in threads:
 - `producer` thread that gets the readings and events from the physical world.
 - `actuator` thread that manages the rgb and serial interface
 - `control` thread that handles the business logic of the application.
+
+For the button part, the functionality relies on events and two delayable works:
+- `debounce_work`: Filters button bounce and sends the corresponding short or long press event on release, unless a long press event was already sent.
+- `long_work`: Sends a LONG_PRESS event even if the button is still held.
 
 ## Interfaces
 To avoid problems between the threads, queued messages will be used. The reference for this can be found here: [Queued Messages](https://docs.zephyrproject.org/latest/kernel/services/data_passing/message_queues.html)

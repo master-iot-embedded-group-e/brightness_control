@@ -23,16 +23,17 @@ void producer_thread(void *p1, void *p2, void *p3)
             return;
         }
         printk("LDR reading as percentage: %d%%\n", ldr_percentage);
-        sensor_data.ldr.brightness = 100 - ldr_percentage;
-        sensor_data.ldr.timestamp = k_uptime_get_32();
+        // Convert LDR reading to brightness (inverted percentage)
+        ldr.brightness = 100 - ldr_percentage; 
+        ldr.timestamp = k_uptime_get_32();
 
-        /* Enviamos el dato a la cola. Si está llena, espera hasta 10ms */
-        k_msgq_put(&q_sensor_data, &sensor_data, K_MSEC(10));
+        // Send the LDR data to the message queue. If the queue is full, wait up to 10ms.
+        k_msgq_put(&q_ldr_data, &ldr, K_MSEC(10));
 
         k_msleep(2000);
     }
 }
 
-/* Macro de Zephyr para registrar y arrancar el hilo automáticamente */
+// Register and start the producer thread automatically using Zephyr's macro.
 K_THREAD_DEFINE(producer_thread_id, STACK_SIZE, producer_thread,
                 NULL, NULL, NULL, PRIORITY, 0, 0);

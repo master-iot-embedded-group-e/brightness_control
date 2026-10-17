@@ -95,7 +95,38 @@ void fsm_thread(void *p1, void *p2, void *p3)
 
 	printk("    FSM thread init   \n");
 
+	button_init();
+    struct button_events_t button_event;
+    struct k_poll_event events[] = {
+        K_POLL_EVENT_INITIALIZER(
+            K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
+            K_POLL_MODE_NOTIFY_ONLY, 
+            &q_button_data
+        ),
+        K_POLL_EVENT_INITIALIZER(
+            K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
+            K_POLL_MODE_NOTIFY_ONLY, 
+            &q_ldr_data
+        )
+    };
+
 	while (1) {
+
+		if (k_poll(events, ARRAY_SIZE(events), K_FOREVER) != 0) {
+			continue;
+		}
+
+		while (k_msgq_get(&q_button_data, &button_event, K_NO_WAIT) == 0) {
+			switch (button_event.event) {
+			case BUTTON_SHORT_PRESS:
+				printk("FSM: short press\n");
+				break;
+			case BUTTON_LONG_PRESS:
+				printk("FSM: long press\n");
+				break;
+			}
+		}
+		
 		/* K_FOREVER makes it blocking */
 		if (k_msgq_get(&q_sensor_data, &sensor_data, K_FOREVER) == 0) {
 			fsm(&fsm_state, &sensor_data, &rgb_state);
