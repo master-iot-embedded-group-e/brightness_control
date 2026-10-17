@@ -144,6 +144,7 @@ void fsm_thread(void *p1, void *p2, void *p3)
 					printk("FSM: Unexpected button event type: %d\n", button_event);
 				break;
 				}
+				fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
 				// Zephyr API requests to reset the event state after attending it.
 				// doc/kernel/services/polling.rst
 				events[0].state = K_POLL_STATE_NOT_READY;
