@@ -4,7 +4,6 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/sys/printk.h>
 #include "gpio.h"
 
 static const struct gpio_dt_spec red =
