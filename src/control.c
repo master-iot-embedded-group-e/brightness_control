@@ -148,7 +148,9 @@ void control_thread(void *p1, void *p2, void *p3)
 	}
 	
 	LOG_INF("thread init");
-	LOG_INF("fsm: %s", state_string[fsm_state]);	
+	LOG_INF("fsm: %s", state_string[fsm_state]);
+	// This first call has ldr data so the LED turns on without additional 2 sec wait
+	fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
 
 	while (1) {
 
