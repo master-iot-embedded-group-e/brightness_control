@@ -29,9 +29,9 @@ static void set_rgb_color(Rgb_state_t *rgb_state, bool red, bool green, bool blu
 	rgb_state->new_rgb_values = !rgb_equal(&rgb_state->rgb, &rgb_state->last_rgb);
 }
 
-static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of_event_t button_event)
+static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of_event_t *button_event)
 {
-	switch ((button_event))
+	switch (*button_event)
 	{
 	case BUTTON_SHORT_PRESS:
 		*state = (*state + NORMAL) & 0x01;
@@ -40,15 +40,22 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 	case BUTTON_LONG_PRESS:
 		*state = OFF;
 		break;
+
+	case NO_PRESSED:
+		break;
 	
 	default:
-		*state = NORMAL;
-		printk("FSM: Unexpected press button duration\n");
+		//*state = NORMAL;
+		printk("FSM: Unexpected press button duration: %d\n", *button_event);
 		break;
 	}
 
+	// Reset event driven variables for the next one
+	*button_event = NO_PRESSED;
+
 	switch ((uint8_t)*state) {
 	case NORMAL:
+		printk("FSM STATE: NORMAL\n");		
 		if (ldr->brightness < 33) {
 			set_rgb_color(rgb_state, true, false, false);
 
@@ -61,10 +68,12 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		break;
 
 	case BLUE:
+		printk("FSM STATE: BLUE\n");		
 		set_rgb_color(rgb_state, false, true, true);
 		break;
 
 	case OFF:
+		printk("FSM STATE: OFF\n");		
 		set_rgb_color(rgb_state, false, false, false);
 		break;
 
@@ -96,8 +105,8 @@ void fsm_thread(void *p1, void *p2, void *p3)
 	printk("    FSM thread init   \n");
 
 	button_init();
-    button_type_of_event_t button_event;
-    struct k_poll_event events[] = {
+    button_type_of_event_t button_event = NO_PRESSED;
+    struct k_poll_event events[2] = {
         K_POLL_EVENT_INITIALIZER(
             K_POLL_TYPE_MSGQ_DATA_AVAILABLE,
             K_POLL_MODE_NOTIFY_ONLY, 
@@ -112,28 +121,43 @@ void fsm_thread(void *p1, void *p2, void *p3)
 
 	while (1) {
 
+		// This is where the thread actually stops until new events
 		if (k_poll(events, ARRAY_SIZE(events), K_FOREVER) != 0) {
 			continue;
 		}
 
-		while (k_msgq_get(&q_button_data, &button_event, K_NO_WAIT) == 0) {
-			switch (button_event) {
-			case BUTTON_SHORT_PRESS:
-				printk("FSM: short press\n");
+		// Zephyr API doc/kernel/services/polling.rst
+		if(events[0].state == K_POLL_STATE_MSGQ_DATA_AVAILABLE)
+		{
+			// We need a loop in case there are several events in he queue
+			while (k_msgq_get(&q_button_data, &button_event, K_NO_WAIT) == 0) {
+				switch (button_event) {
+				case BUTTON_SHORT_PRESS:
+					printk("FSM: short press\n");
+					break;
+				case BUTTON_LONG_PRESS:
+					printk("FSM: long press\n");
+					break;
+				case NO_PRESSED:
+					break;
+				default:
+					printk("FSM: Unexpected button event type: %d\n", button_event);
 				break;
-			case BUTTON_LONG_PRESS:
-				printk("FSM: long press\n");
-				break;
-			default:
-				printk("FSM: Unexpected button event type\n");
-			break;
-			}			
+				}
+				// Zephyr API requests to reset the event state after attending it.
+				// doc/kernel/services/polling.rst
+				events[0].state = K_POLL_STATE_NOT_READY;
+			}
 		}
-
-		/* K_FOREVER makes it blocking */
-		if (k_msgq_get(&q_ldr_data, &ldr_data, K_NO_WAIT) == 0) {
-			fsm(&fsm_state, &ldr_data, &rgb_state, button_event);
-		}
+		else if(events[1].state == K_POLL_STATE_MSGQ_DATA_AVAILABLE)
+		{
+			// Queued lectures would be read in the next lopp as k_poll would return another one.
+			if (k_msgq_get(&q_ldr_data, &ldr_data, K_NO_WAIT) == 0) {
+				fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
+				// Zephyr API requests to reset the event state after attending it.
+				events[1].state = K_POLL_STATE_NOT_READY;
+			}
+		}				
 	}
 }
 
