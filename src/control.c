@@ -72,7 +72,7 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 
 	case BLUE:
 		LOG_DBG("fsm: BLUE");		
-		set_rgb_color(rgb_state, false, true, true);
+		set_rgb_color(rgb_state, false, false, true);
 		break;
 
 	case OFF:
