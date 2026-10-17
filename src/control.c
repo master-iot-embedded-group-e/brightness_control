@@ -1,8 +1,11 @@
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include "interface.h"
 
 #define STACK_SIZE 1024
 #define PRIORITY   6 // Set higher priority for fast processing
+
+LOG_MODULE_REGISTER(control, LOG_LEVEL_INF);
 
 typedef enum {
 	BLUE,
@@ -46,7 +49,7 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 	
 	default:
 		//*state = NORMAL;
-		printk("FSM: Unexpected press button duration: %d\n", *button_event);
+		LOG_ERR("FSM: Unexpected press button duration: %d\n", *button_event);
 		break;
 	}
 
@@ -55,7 +58,7 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 
 	switch ((uint8_t)*state) {
 	case NORMAL:
-		printk("FSM STATE: NORMAL\n");		
+		LOG_DBG("fsm: NORMAL\n");		
 		if (ldr->brightness < 33) {
 			set_rgb_color(rgb_state, true, false, false);
 
@@ -68,17 +71,17 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		break;
 
 	case BLUE:
-		printk("FSM STATE: BLUE\n");		
+		LOG_DBG("fsm: BLUE\n");		
 		set_rgb_color(rgb_state, false, true, true);
 		break;
 
 	case OFF:
-		printk("FSM STATE: OFF\n");		
+		LOG_DBG("fsm: OFF\n");		
 		set_rgb_color(rgb_state, false, false, false);
 		break;
 
 	default:
-		printk("FSM: Unexpected state\n");
+		LOG_ERR("Unexpected state: %d\n", (uint8_t)*state);
 		break;
 	}
 
@@ -119,13 +122,13 @@ void control_thread(void *p1, void *p2, void *p3)
         )
     };
 
-	printk("    FSM thread init   \n");
-
 	// Wait for the first valid LDR measurement before starting the control logic
 	if (k_msgq_get(&q_ldr_data, &ldr_data, K_FOREVER) == 0) { 
 		// Zephyr API requests to reset the event state after attending it.
 		events[1].state = K_POLL_STATE_NOT_READY;
 	}
+	
+	LOG_INF("thread init\n");
 
 	while (1) {
 
@@ -141,15 +144,15 @@ void control_thread(void *p1, void *p2, void *p3)
 			while (k_msgq_get(&q_button_data, &button_event, K_NO_WAIT) == 0) {
 				switch (button_event) {
 				case BUTTON_SHORT_PRESS:
-					printk("FSM: short press\n");
+					LOG_INF("short press\n");
 					break;
 				case BUTTON_LONG_PRESS:
-					printk("FSM: long press\n");
+					LOG_INF("long press\n");
 					break;
 				case NO_PRESSED:
 					break;
 				default:
-					printk("FSM: Unexpected button event type: %d\n", button_event);
+					LOG_WRN("unexpected button event type: %d\n", button_event);
 				break;
 				}
 				fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);

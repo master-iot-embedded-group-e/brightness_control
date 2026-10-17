@@ -31,7 +31,7 @@ static int ldr_power_on(void) {
     LOG_DBG("Turning on LDR power\n");
     int ret = gpio_power_on(&ldr_power);
     if (ret < 0) {
-        LOG_ERR("ould not activate LDR power: %d\n", ret);
+        LOG_ERR("could not activate LDR power: %d\n", ret);
         return ret;
     }
     // Wait for the voltage to stabilize before reading.
@@ -70,7 +70,7 @@ static int ldr_power_off(void) {
 }
 
 int ldr_init(void) {
-    LOG_INF("Initializing LDR\n");
+    LOG_INF("init\n");
     int ret;
     // Initialize the GPIO that powers the LDR.
     ret = gpio_output_init(&ldr_power);
@@ -95,7 +95,7 @@ int ldr_init(void) {
         return ret;
     }
     
-    LOG_INF("LDR initialization complete\n");
+    LOG_INF("init complete\n");
     return 0;
 }
 

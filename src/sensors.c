@@ -13,22 +13,22 @@ void producer_thread(void *p1, void *p2, void *p3)
 {
     ldr_t ldr;
 	int err = 0;
-
-    LOG_INF("    Producer thread init   \n");
-
+		
 	err = ldr_init();
     if (err < 0) {
-        LOG_ERR("ERROR: could not initialize LDR. %d\n", err);
+		LOG_ERR("ERROR: could not initialize LDR. %d\n", err);
 		LOG_ERR("ERROR: Producer will not start\n");
         return;
     }
-
+	
 	err = button_init();
 	if (err < 0) {
 		LOG_ERR("ERROR: could not initialize the buttons. %d\n", err);
 		LOG_ERR("ERROR: Producer will not start\n");
 		return;
     }
+	
+	LOG_INF("thread init\n");
 
     while (1) {
         uint8_t ldr_percentage;
