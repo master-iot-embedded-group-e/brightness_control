@@ -8,7 +8,6 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/adc.h>
 #include <zephyr/pm/device_runtime.h>
-#include <zephyr/sys/printk.h>
 #include <errno.h>
 #include <zephyr/drivers/gpio.h>
 

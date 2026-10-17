@@ -23,7 +23,7 @@ int main(void)
 	// Keep the main thread idle after initialization
 	while (1) {
 		k_sleep(K_FOREVER);
-		LOG_ERR("main woke up\n");
+		LOG_ERR("main woke up");
 	}
 	return 0;
 }
