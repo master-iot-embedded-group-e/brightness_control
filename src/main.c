@@ -21,7 +21,8 @@ int main(void)
                 - Omar Pineiro\n \
                 - Carlos Egea\n\n");
 	// Keep the main thread idle after initialization
-	while (1) {
+	while (1)
+	{
 		k_sleep(K_FOREVER);
 		LOG_ERR("main woke up");
 	}

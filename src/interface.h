@@ -5,22 +5,24 @@
 #include <zephyr/kernel.h>
 
 /* 1. Estructuras de datos que viajan entre hilos */
-typedef struct {
+typedef struct
+{
     uint16_t brightness;
 } ldr_t;
 
-typedef struct {
+typedef struct
+{
     bool blue;
     bool red;
     bool green;
 } rgb_t;
 
-typedef enum{
+typedef enum
+{
     NO_PRESSED,
     BUTTON_SHORT_PRESS,
     BUTTON_LONG_PRESS,
 } button_type_of_event_t;
-
 
 /*
 Read https://docs.zephyrproject.org/latest/kernel/services/data_passing/message_queues.html#defining-a-message-queue

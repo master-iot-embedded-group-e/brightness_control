@@ -12,28 +12,40 @@ void actuator_thread_run(void *p1, void *p2, void *p3)
 {
     rgb_t rgb;
     int ret = rgb_init();
-    if (ret < 0) {
+    if (ret < 0)
+    {
         LOG_ERR("initializing RGB");
         return;
     }
 
     LOG_INF("thread init");
 
-    while (1) {
-        if (k_msgq_get(&q_rgb_data, &rgb, K_FOREVER) == 0) {
-            if (rgb.red) {
+    while (1)
+    {
+        if (k_msgq_get(&q_rgb_data, &rgb, K_FOREVER) == 0)
+        {
+            if (rgb.red)
+            {
                 red_on();
-            } else {
+            }
+            else
+            {
                 red_off();
             }
-            if (rgb.green) {
+            if (rgb.green)
+            {
                 green_on();
-            } else {
+            }
+            else
+            {
                 green_off();
             }
-            if (rgb.blue) {
+            if (rgb.blue)
+            {
                 blue_on();
-            } else {
+            }
+            else
+            {
                 blue_off();
             }
         }
