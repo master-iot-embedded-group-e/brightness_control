@@ -60,3 +60,18 @@ int blue_off(void)
 {
     return gpio_power_off(&blue);
 }
+
+int rgb_set(bool red, bool green, bool blue)
+{
+    // A GPIO write is a register access (microseconds, never blocks), so the
+    // caller can drive the LED directly instead of handing it to a thread.
+    int ret = red ? red_on() : red_off();
+    if (ret < 0)
+        return ret;
+
+    ret = green ? green_on() : green_off();
+    if (ret < 0)
+        return ret;
+
+    return blue ? blue_on() : blue_off();
+}

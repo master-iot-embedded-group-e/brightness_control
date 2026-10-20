@@ -1,9 +1,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include "interface.h"
-
-#define STACK_SIZE 1024
-#define PRIORITY 6 // Set higher priority for fast processing
+#include "control.h"
+#include "rgb.h"
 
 LOG_MODULE_REGISTER(control, LOG_LEVEL_INF);
 
@@ -17,27 +16,42 @@ typedef enum
 } Fsm_t;
 static const char *state_string[3] = {"BLUE", "NORMAL", "OFF"};
 
+// Colour last written to the LED. Local to this file now that it no longer
+// travels between threads.
 typedef struct
 {
-	rgb_t rgb;
-	rgb_t last_rgb;
-	bool new_rgb_values;
-} Rgb_state_t;
+	bool blue;
+	bool red;
+	bool green;
+} rgb_t;
 
 static bool rgb_equal(const rgb_t *a, const rgb_t *b)
 {
 	return a->red == b->red && a->green == b->green && a->blue == b->blue;
 }
 
-static void set_rgb_color(Rgb_state_t *rgb_state, bool red, bool green, bool blue)
+static void set_rgb_color(rgb_t *last_rgb, bool red, bool green, bool blue)
 {
-	rgb_state->rgb.blue = blue;
-	rgb_state->rgb.red = red;
-	rgb_state->rgb.green = green;
-	rgb_state->new_rgb_values = !rgb_equal(&rgb_state->rgb, &rgb_state->last_rgb);
+	const rgb_t rgb = {.red = red, .green = green, .blue = blue};
+
+	// fsm() runs on every LDR sample (2 s): only touch the GPIOs when the
+	// colour actually changes.
+	if (rgb_equal(&rgb, last_rgb))
+	{
+		return;
+	}
+
+	int err = rgb_set(red, green, blue);
+	if (err < 0)
+	{
+		// last_rgb is kept, so the next fsm() call retries the write.
+		LOG_ERR("could not set the RGB LED: %d", err);
+		return;
+	}
+	*last_rgb = rgb;
 }
 
-static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of_event_t *button_event)
+static void fsm(Fsm_t *state, ldr_t *ldr, rgb_t *last_rgb, button_type_of_event_t *button_event)
 {
 	// State evaluation
 	Fsm_t new_state = *state;
@@ -81,25 +95,25 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		k_event_post(&e_enable_devices, EV_ADC_ON);
 		if (ldr->brightness < 33)
 		{
-			set_rgb_color(rgb_state, true, false, false);
+			set_rgb_color(last_rgb, true, false, false);
 		}
 		else if (ldr->brightness <= 66 && ldr->brightness >= 33)
 		{
-			set_rgb_color(rgb_state, true, true, false);
+			set_rgb_color(last_rgb, true, true, false);
 		}
 		else if (ldr->brightness > 66)
 		{
-			set_rgb_color(rgb_state, false, true, false);
+			set_rgb_color(last_rgb, false, true, false);
 		}
 		break;
 
 	case BLUE:
-		set_rgb_color(rgb_state, false, false, true);
+		set_rgb_color(last_rgb, false, false, true);
 		k_event_clear(&e_enable_devices, EV_ADC_ON);
 		break;
 
 	case OFF:
-		set_rgb_color(rgb_state, false, false, false);
+		set_rgb_color(last_rgb, false, false, false);
 		k_event_clear(&e_enable_devices, EV_ADC_ON);
 		break;
 
@@ -107,30 +121,16 @@ static void fsm(Fsm_t *state, ldr_t *ldr, Rgb_state_t *rgb_state, button_type_of
 		LOG_WRN("Unexpected state: %d", (uint8_t)*state);
 		break;
 	}
-
-	if (rgb_state->new_rgb_values == false)
-	{
-		// return to avoid waken up the actuator thread
-		return;
-	}
-
-	if (k_msgq_put(&q_rgb_data, &rgb_state->rgb, K_MSEC(10)) == 0)
-	{
-		rgb_state->last_rgb = rgb_state->rgb;
-	}
 }
 
-void control_thread(void *p1, void *p2, void *p3)
+int control_run(void)
 {
 	ldr_t ldr_data = {
 		.brightness = 0,
 	};
 	Fsm_t fsm_state = NORMAL;
-	Rgb_state_t rgb_state = {
-		.last_rgb = {0},
-		.rgb = {0},
-		.new_rgb_values = false,
-	};
+	// The LEDs are configured GPIO_OUTPUT_INACTIVE, so they start off.
+	rgb_t last_rgb = {0};
 	button_type_of_event_t button_event = NO_PRESSED;
 
 	// Create poll structures
@@ -144,6 +144,13 @@ void control_thread(void *p1, void *p2, void *p3)
 			K_POLL_MODE_NOTIFY_ONLY,
 			&q_ldr_data)};
 
+	int err = rgb_init();
+	if (err < 0)
+	{
+		LOG_ERR("could not initialize the RGB LED: %d", err);
+		return err;
+	}
+
 	// Enable at init the ADC measurements.
 	k_event_post(&e_enable_devices, EV_ADC_ON);
 
@@ -154,10 +161,10 @@ void control_thread(void *p1, void *p2, void *p3)
 		events[1].state = K_POLL_STATE_NOT_READY;
 	}
 
-	LOG_INF("thread init");
+	LOG_INF("control init");
 	LOG_INF("fsm: %s", state_string[fsm_state]);
 	// This first call has ldr data so the LED turns on without additional 2 sec wait
-	fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
+	fsm(&fsm_state, &ldr_data, &last_rgb, &button_event);
 
 	while (1)
 	{
@@ -188,7 +195,7 @@ void control_thread(void *p1, void *p2, void *p3)
 					LOG_WRN("unexpected button event type: %d", button_event);
 					break;
 				}
-				fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
+				fsm(&fsm_state, &ldr_data, &last_rgb, &button_event);
 				// Zephyr API requests to reset the event state after attending it.
 				// doc/kernel/services/polling.rst
 				events[0].state = K_POLL_STATE_NOT_READY;
@@ -199,12 +206,10 @@ void control_thread(void *p1, void *p2, void *p3)
 			// Queued lectures would be read in the next lopp as k_poll would return another one.
 			if (k_msgq_get(&q_ldr_data, &ldr_data, K_NO_WAIT) == 0)
 			{
-				fsm(&fsm_state, &ldr_data, &rgb_state, &button_event);
+				fsm(&fsm_state, &ldr_data, &last_rgb, &button_event);
 				// Zephyr API requests to reset the event state after attending it.
 				events[1].state = K_POLL_STATE_NOT_READY;
 			}
 		}
 	}
 }
-
-K_THREAD_DEFINE(control_thread_id, STACK_SIZE, control_thread, NULL, NULL, NULL, PRIORITY, 0, 0);

@@ -7,7 +7,6 @@ project(brightness_control)
 
 target_sources(app PRIVATE
     src/main.c
-    src/actuator.c
     src/control.c
     src/sensors.c
     src/ldr.c

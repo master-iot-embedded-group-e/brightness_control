@@ -10,13 +10,6 @@ typedef struct
     uint16_t brightness;
 } ldr_t;
 
-typedef struct
-{
-    bool blue;
-    bool red;
-    bool green;
-} rgb_t;
-
 typedef enum
 {
     NO_PRESSED,
@@ -29,7 +22,6 @@ Read https://docs.zephyrproject.org/latest/kernel/services/data_passing/message_
 */
 #define MAX_NUMBER_OF_MESSAGES 10
 extern struct k_msgq q_ldr_data;
-extern struct k_msgq q_rgb_data;
 extern struct k_msgq q_button_data;
 
 // Event to signal de ADC to stop
