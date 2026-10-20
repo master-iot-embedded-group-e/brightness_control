@@ -104,10 +104,39 @@ Button B2 is integrated in the board and in the devicetree it is the `sw1` alias
 
 | Thread | File | Priority | Role |
 |---|---|---|---|
-| `main` | `main.c` | 0 | Prints the banner, then sleeps forever (`K_FOREVER`). |
-| `control` | `control.c` | 6 | Business logic (FSM). Waits for button events and LDR samples, decides the LED colour and whether the ADC runs. |
+| `main` | `main.c`, `control.c` | 6 | Prints the banner, then runs the control logic (`control_run()`): the FSM waits for button events and LDR samples, decides the LED colour, drives the LED and decides whether the ADC runs. |
 | `producer` | `sensors.c` | 7 | Initializes the LDR and the button. Reads the LDR every 2 s while the ADC is enabled. |
-| `actuator` | `actuator.c` | 7 | Drives the RGB LED from the colour it receives. |
+
+After the project review, control moved into the main thread and the actuator thread was removed:
+
+- `main` only slept after printing the banner, so its stack was wasted. It now runs the control
+  logic, at `CONFIG_MAIN_THREAD_PRIORITY=6` (`prj.conf`) to stay above the producer, as the old
+  control thread did.
+- Setting the LED is three GPIO writes: it never blocks and takes microseconds, so it does not
+  need its own thread. `control.c` calls `rgb_set()` directly, and only when the colour changes.
+
+#### RAM saved
+
+Measured by comparing the RAM symbols (`arm-zephyr-eabi-nm -S`) of `zephyr.elf` before and after
+the change. Only these symbols differ:
+
+| Symbol | Bytes |
+|---|---|
+| `control` thread stack | −1088 |
+| `actuator` thread stack | −1088 |
+| `control` thread object (`struct k_thread`) | −136 |
+| `actuator` thread object (`struct k_thread`) | −136 |
+| `q_rgb_data` queue object | −48 |
+| `q_rgb_data` buffer (10 messages × 3 B) | −30 |
+| **Total** | **−2526** |
+
+This matches `arm-zephyr-eabi-size`: `data + bss` went from 12984 B to 10458 B (RAM use from about 20%
+to 16% of 64 KB). Code (`text`) also dropped by 100 B, from 42032 B to 41932 B.
+
+Most of the saving comes from the stacks: each thread reserves its whole stack statically, used or
+not. `main` already had its own (`CONFIG_MAIN_STACK_SIZE=1024`), which is now used instead of
+sleeping. Each removed stack takes 1088 B instead of the requested 1024 B; the extra 64 B are most
+likely the MPU stack guard (`CONFIG_MPU_STACK_GUARD=y`).
 
 ### Button events
 
@@ -143,8 +172,8 @@ Three states, driven by two events from the button:
   not handle it again on the next LDR sample.
 3. **Update the outputs:** in `NORMAL`, enable ADC sampling and select RED below 33%, YELLOW from
   33% through 66%, or GREEN above 66%. In `BLUE`, show blue and disable ADC sampling. In `OFF`,
-  turn the LED off and disable ADC sampling. Send an RGB message to the actuator only when colour
-  needs to be changed.
+  turn the LED off and disable ADC sampling. Write the LED only when the colour needs to be
+  changed.
 
 ## Interfaces
 To avoid problems between the threads, data is passed through [message queues](https://github.com/zephyrproject-rtos/zephyr/blob/v4.4.2/doc/kernel/services/data_passing/message_queues.rst?plain=1).
@@ -155,7 +184,6 @@ The interface is defined in `src/interface.h`:
 |---|---|---|
 | `q_ldr_data` | `ldr_t` | `brightness` in % (0–100) |
 | `q_button_data` | `button_type_of_event_t` | `BUTTON_SHORT_PRESS` / `BUTTON_LONG_PRESS` |
-| `q_rgb_data` | `rgb_t` | `red`, `green`, `blue` booleans |
 | `e_enable_devices` | `struct k_event` | bit `EV_ADC_ON` |
 
 The queues are defined in `main.c` with `K_MSGQ_DEFINE`, and the event object in `control.c` with
@@ -164,7 +192,7 @@ The queues are defined in `main.c` with `K_MSGQ_DEFINE`, and the event object in
 ## Serial output
 
 All output goes through Zephyr's logging subsystem (`CONFIG_LOG=y`, deferred mode). Each source file
-registers its own module (`control`, `sensors`, `ldr`, `button`, `gpio`, `actuator`, `main`), so
+registers its own module (`control`, `sensors`, `ldr`, `button`, `gpio`, `main`), so
 every line shows a timestamp, the level and the module. Levels follow their meaning:
 
 ## Testing
