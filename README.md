@@ -105,7 +105,7 @@ Button B2 is integrated in the board and in the devicetree it is the `sw1` alias
 | Thread | File | Priority | Role |
 |---|---|---|---|
 | `main` | `main.c`, `control.c` | 6 | Prints the banner, then runs the control logic (`control_run()`): the FSM waits for button events and LDR samples, decides the LED colour, drives the LED and decides whether the ADC runs. |
-| `producer` | `sensors.c` | 7 | Initializes the LDR and the button. Reads the LDR every 2 s while the ADC is enabled. |
+| `producer` | `sensors.c` | 7 | Initializes the LDR and the button. Reads the LDR every 2 s, paced by a periodic `k_timer`, while the ADC is enabled. |
 
 After the project review, control moved into the main thread and the actuator thread was removed:
 
@@ -114,6 +114,12 @@ After the project review, control moved into the main thread and the actuator th
   control thread did.
 - Setting the LED is three GPIO writes: it never blocks and takes microseconds, so it does not
   need its own thread. `control.c` calls `rgb_set()` directly, and only when the colour changes.
+- The producer was paced with `k_msleep(2000)`, which counts from the moment it is called: the
+  time spent reading the ADC and logging was added to every period, and the log timestamps drifted
+  a few ms per reading. It now waits on a periodic `k_timer` (`k_timer_status_sync()`), which
+  re-arms itself with an absolute timeout, so readings stay on multiples of 2 s. The ADC is still
+  read in the thread, not in a timer expiry function (ISR context, where `adc_read()` cannot block).
+  The timer is stopped while the ADC is disabled, so it does not wake the CPU from Stop mode.
 
 #### RAM saved
 
